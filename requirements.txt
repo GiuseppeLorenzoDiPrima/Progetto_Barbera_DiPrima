@@ -1,1 +1,9 @@
-# Librerie
+torch
+torchvision
+yaml_config_override
+addict
+tqdm
+scikit-learn
+sklearn
+numpy
+pandas

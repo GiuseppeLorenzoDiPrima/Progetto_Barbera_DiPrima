@@ -1,1 +1,28 @@
-# configuration
+data:
+  data_dir: dataset//chest_xray//
+
+training:
+  epochs: 1
+  batch_size: 32
+  learning_rate: 0.001 
+  optimizer: adam # Choose one: adam, sgd or rmsprop
+  warmup_ratio: 0.1 
+  checkpoint_dir: checkpoints/
+  device: cuda
+  evaluation_metric: accuracy # Choose one: accuracy, precision, recall, f1 or loss
+  best_metric_lower_is_better: false # Choose one: true or false
+
+ResNet_model:
+  stride: [2, 1]
+  padding: [3, 1]
+  kernel: [7, 3]
+  channels_of_color: 3 # RGB
+  planes: [64, 128, 256, 512]
+  in_features: 512
+
+AlexNet_model:
+  stride: [4, 2]
+  padding: [2, 1]
+  kernel: [8, 5, 3]
+  channels_of_color: 3 # RGB
+  inplace: true # Choose one: true or false
