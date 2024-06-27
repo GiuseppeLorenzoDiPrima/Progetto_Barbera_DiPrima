@@ -108,6 +108,16 @@ def train_model(model, config, train_dl, device, criterion):
             best_model, 
             config.training.best_metric_lower_is_better
         )
+        # Earling stopping
+        if config.training.early_stopping_metric.lower() == 'loss':
+            if val_metrics[config.training.early_stopping_metric.lower()] > best_val_metric[config.training.early_stopping_metric.lower()]:
+                no_valid_epochs += 1
+        else:
+            if val_metrics[config.training.early_stopping_metric.lower()] < best_val_metric[config.training.early_stopping_metric.lower()]:
+                no_valid_epochs += 1
+        if no_valid_epochs == config.training.earling_stopping_max_no_valid_epochs:
+            print(f"The training process has ended because the maximum value of early stopping, which is {config.training.earling_stopping_max_no_valid_epochs:}, has been reached.")
+            break
     return best_val_metric, best_model, training_metrics_list, validation_metrics_list
 
 def evaluate_model(best_val_metric, best_model, test_dl, criterion, device, type_model):
@@ -221,8 +231,11 @@ if __name__ == '__main__':
     
     first_metrics, first_conf_matrix = evaluate_model(first_best_val_metric, first_best_model, test_dl, criterion, device, type_model='ResNet')
     print()
+    print_confusion_matrix(first_conf_matrix, type_model='ResNet')
+    print()
     second_metrics, second_conf_matrix = evaluate_model(second_best_val_metric, second_best_model, test_dl, criterion, device, type_model='AlexNet')
     print()
+    print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
     print("---------------------")
     
     # ---------------------

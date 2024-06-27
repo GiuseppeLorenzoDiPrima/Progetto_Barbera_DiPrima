@@ -2,7 +2,7 @@ data:
   data_dir: dataset//chest_xray//
 
 training:
-  epochs: 1
+  epochs: 20
   batch_size: 32
   learning_rate: 0.001 
   optimizer: adam # Choose one: adam, sgd or rmsprop
@@ -11,6 +11,8 @@ training:
   device: cuda
   evaluation_metric: accuracy # Choose one: accuracy, precision, recall, f1 or loss
   best_metric_lower_is_better: false # Choose one: true or false
+  early_stopping_metric: loss # Choose one: accuracy, precision, recall, f1 or loss
+  earling_stopping_max_no_valid_epochs: 8
 
 ResNet_model:
   stride: [2, 1]

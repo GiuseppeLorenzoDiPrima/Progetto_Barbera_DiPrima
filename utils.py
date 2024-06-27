@@ -5,6 +5,7 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 import pandas as pd
 import numpy as np
+import seaborn as sns
 
 # Standard library imports
 import os
@@ -54,3 +55,12 @@ def compare_performance(first_metrics, second_metrics):
         data.append([first_metrics[i], second_metrics[i], difference[i]])
     test_result = pd.DataFrame(data, columns=['First_model', 'Second_model', 'Difference'], index=labels).round(4)
     print(test_result)
+
+def print_confusion_matrix(conf_matrix, type_model):
+    print("Confusion matrix for " + str(type_model) + " model:")
+    if len(conf_matrix[0]) == 2:
+        labels = ['NORMAL', 'PNEUMONIA']
+    else:
+        labels = ['BACTERIA', 'NORMAL', 'VIRUS']
+    df_confusion_matrix = pd.DataFrame(conf_matrix, index=labels, columns=labels)
+    print(df_confusion_matrix)

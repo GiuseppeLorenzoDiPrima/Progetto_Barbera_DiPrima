@@ -119,9 +119,14 @@ if __name__ == '__main__':
     # 7. Evaluate
     # ---------------------
     
+    print("Evaluating models...\n")
     first_metrics, first_conf_matrix = evaluate(first_model, test_dl, criterion, device)
+    print_confusion_matrix(first_conf_matrix, type_model='ResNet')
+    print()
     second_metrics, second_conf_matrix = evaluate(second_model, test_dl, criterion, device)
-    
+    print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
+    print("---------------------")
+          
     # ---------------------
     # 8. Print performance
     # ---------------------
