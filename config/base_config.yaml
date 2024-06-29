@@ -28,3 +28,6 @@ AlexNet_model:
   kernel: [8, 5, 3]
   channels_of_color: 3 # RGB
   inplace: true # Choose one: true or false
+
+classification:
+  type: binary # Choose one: binary or ternary

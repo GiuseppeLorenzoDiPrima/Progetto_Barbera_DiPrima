@@ -171,8 +171,11 @@ if __name__ == '__main__':
     # ---------------------
     
     # Calcolo i dataset
-    train_dataset, val_dataset, test_dataset = binary_load(config)
-        
+    if config.classification.type.lower() == 'binary':
+        train_dataset, val_dataset, test_dataset = binary_load(config)
+    else:
+        train_dataset, val_dataset, test_dataset = ternary_load(config)
+            
     train_dl = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config.training.batch_size,

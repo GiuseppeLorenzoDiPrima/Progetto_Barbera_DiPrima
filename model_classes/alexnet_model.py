@@ -5,7 +5,10 @@ import torch.nn as nn
 class AlexNet(nn.Module):
     def __init__(self, type_net, stride_size, padding_size, kernel_size, channels_of_color, inplace):
         super(AlexNet, self).__init__()
-        num_classes = 2
+        if type_net.lower() == 'binary':
+            num_classes = 2
+        else:
+            num_classes = 3
         self.features = nn.Sequential(
             nn.Conv2d(channels_of_color, 96, kernel_size= kernel_size[0], stride=stride_size[0], padding=padding_size[0]),
             nn.ReLU(inplace=inplace),
