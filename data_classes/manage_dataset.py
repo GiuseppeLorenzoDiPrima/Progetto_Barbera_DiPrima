@@ -4,6 +4,10 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
+
+# Local application/library specific imports
+from utils import save_graph
 
 # Standard library imports
 import os
@@ -226,6 +230,29 @@ def split_ternary_directory():
         else:
             shutil.move(os.path.join(path[2], 'PNEUMONIA', element), os.path.join(path[2], 'VIRUS', element))
     os.rmdir(str(path[2]) + 'PNEUMONIA')
+    
+def visualize_class_distribution(dataset, dataset_name, view, resize):
+    class_counts = np.zeros(len(dataset.classes))
+    class_counts = class_count(dataset)
+    plt.bar(dataset.classes, class_counts, color=['blue', 'orange', 'red', 'yellow', 'purple'])
+    plt.xlabel("Class")
+    plt.ylabel("Number of images")
+    plt.title(f"Class distribution in the {dataset_name.lower()} dataset")
+    if not resize:
+        dataset_name += '_original'
+        save_graph(dataset_name, 'Dataset_original')
+    else:
+        dataset_name += '_resized'
+        save_graph(dataset_name, 'Dataset_resized')
+    if view:
+        plt.show()
+    plt.close()
+    
+def print_dataset_graph(train_dataset, val_dataset, test_dataset, view, resize):
+    print("Drawing graph for class distribution in dataset...")
+    visualize_class_distribution(train_dataset, "Train", view, resize)
+    visualize_class_distribution(val_dataset, "Validation", view, resize)
+    visualize_class_distribution(test_dataset, "Test", view, resize)
 
 def load_datasets(config):
     train_dataset = ChestXrayDataset(type='train', root=config.data)
@@ -233,11 +260,15 @@ def load_datasets(config):
     test_dataset  = ChestXrayDataset(type='test', root=config.data)
     # print some statistics before
     print_shapes('before', train_dataset, val_dataset, test_dataset, config.classification.type)
+    if config.graph.create_dataset_graph:
+        print_dataset_graph(train_dataset, val_dataset, test_dataset, config.graph.view_dataset_graph, resize=False)
     print("---------------------")
     # Ridistribuisci i datasets
     train_dataset, val_dataset = resize_datasets(train_dataset, val_dataset)
     # print some statistics after
     print_shapes('after', train_dataset, val_dataset, test_dataset, config.classification.type)
+    if config.graph.create_dataset_graph:
+        print_dataset_graph(train_dataset, val_dataset, test_dataset, config.graph.view_dataset_graph, resize=True)
     print("---------------------")
     return train_dataset, val_dataset, test_dataset
 

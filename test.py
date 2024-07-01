@@ -120,13 +120,17 @@ if __name__ == '__main__':
     # ---------------------
     
     print("Evaluating models...\n")
+    
     first_metrics, first_conf_matrix = evaluate(first_model, test_dl, criterion, device)
     print_confusion_matrix(first_conf_matrix, type_model='ResNet')
     print()
     second_metrics, second_conf_matrix = evaluate(second_model, test_dl, criterion, device)
     print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
     print("---------------------")
-          
+    if config.graph.create_model_graph:
+        print_confusion_matrix_graph(first_conf_matrix, config.graph.view_model_graph, type_model='ResNet', test=True)
+        print_confusion_matrix_graph(second_conf_matrix, config.graph.view_model_graph, type_model='AlexNet', test=True)
+    
     # ---------------------
     # 8. Print performance
     # ---------------------
@@ -148,5 +152,7 @@ if __name__ == '__main__':
     values.append(extract_value(second_metrics))
     compare_performance(values[0], values[1])
     print("---------------------")
-    
+    if config.graph.create_compare_graph:
+        print_compare_graph(values[0], values[1], config.graph.view_compare_graph, test=True)
+
     print("\nTest finish correctly.\n")

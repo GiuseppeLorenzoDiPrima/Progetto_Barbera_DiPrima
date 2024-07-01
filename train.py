@@ -173,9 +173,9 @@ if __name__ == '__main__':
     # Calcolo i dataset
     if config.classification.type.lower() == 'binary':
         train_dataset, val_dataset, test_dataset = binary_load(config)
-    else:
+    else:    
         train_dataset, val_dataset, test_dataset = ternary_load(config)
-            
+        
     train_dl = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config.training.batch_size,
@@ -228,6 +228,10 @@ if __name__ == '__main__':
     print("---------------------")
     second_best_val_metric, second_best_model, second_training_metrics, second_validation_metrics = train_model(second_model, config, train_dl, device, criterion)
     
+    if config.graph.create_model_graph:
+        print_metrics_graph(first_training_metrics, first_validation_metrics, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model='ResNet')
+        print_metrics_graph(second_training_metrics, second_validation_metrics, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model='AlexNet')
+    
     # --------------------------------
     # 6. Evaluate model on test set
     # --------------------------------
@@ -240,13 +244,18 @@ if __name__ == '__main__':
     print()
     print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
     print("---------------------")
-    
+    if config.graph.create_model_graph:
+        print_confusion_matrix_graph(first_conf_matrix, config.graph.view_model_graph, type_model='ResNet', test=False)
+        print_confusion_matrix_graph(second_conf_matrix, config.graph.view_model_graph, type_model='AlexNet', test=False)
+
     # ---------------------
     # 7. Compare performance
     # ---------------------
     
     compare_performance(first_metrics, second_metrics)
-    
+    if config.graph.create_compare_graph:
+        print_compare_graph(first_metrics, second_metrics, config.graph.view_compare_graph, test=False)
+
     # ---------------------
     # 8. Save model
     # ---------------------

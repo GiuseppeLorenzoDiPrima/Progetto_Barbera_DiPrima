@@ -6,5 +6,8 @@ tqdm
 scikit-learn
 sklearn
 numpy
+matplotlib
 pandas
+shutil
 seaborn
+tkinter

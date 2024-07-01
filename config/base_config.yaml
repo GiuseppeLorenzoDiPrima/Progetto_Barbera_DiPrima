@@ -12,7 +12,7 @@ training:
   evaluation_metric: accuracy # Choose one: accuracy, precision, recall, f1 or loss
   best_metric_lower_is_better: false # Choose one: true or false
   early_stopping_metric: loss # Choose one: accuracy, precision, recall, f1 or loss
-  earling_stopping_max_no_valid_epochs: 8
+  earling_stopping_max_no_valid_epochs: 3
 
 ResNet_model:
   stride: [2, 1]
@@ -28,6 +28,15 @@ AlexNet_model:
   kernel: [8, 5, 3]
   channels_of_color: 3 # RGB
   inplace: true # Choose one: true or false
+
+graph:
+  create_dataset_graph: true # Choose one: true or false
+  view_dataset_graph: false # Choose one: true or false
+  create_model_graph: true # Choose one: true or false
+  view_model_graph: false # Choose one: true or false
+  create_compare_graph: true # Choose one: true or false
+  view_compare_graph: false # Choose one: true or false
+  metric_plotted_during_traininig: [accuracy, precision, recall, f1, loss] # Choose: accuracy, precision, recall, f1 and/or loss
 
 classification:
   type: binary # Choose one: binary or ternary
