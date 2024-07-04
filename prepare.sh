@@ -1,5 +1,5 @@
-# Installa i requisiti
+# Install the requirements
 pip install -r requirements.txt
 
-# Copia dataset
+# Copy the dataset from a github repository
 git clone https://github.com/GiuseppeLorenzoDiPrima/dataset.git

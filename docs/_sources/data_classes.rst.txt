@@ -1,0 +1,21 @@
+data\_classes package
+=====================
+
+Submodules
+----------
+
+data\_classes.manage\_dataset module
+------------------------------------
+
+.. automodule:: data_classes.manage_dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: data_classes
+   :members:
+   :undoc-members:
+   :show-inheritance:

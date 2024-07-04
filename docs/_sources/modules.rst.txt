@@ -1,0 +1,12 @@
+Progetto completo
+=================
+
+.. toctree::
+   :maxdepth: 4
+
+   data_classes
+   extract_representations
+   model_classes
+   test
+   train
+   utils

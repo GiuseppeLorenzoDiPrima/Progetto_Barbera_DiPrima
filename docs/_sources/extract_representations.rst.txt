@@ -1,0 +1,21 @@
+extract\_representations package
+================================
+
+Submodules
+----------
+
+extract\_representations.vision\_embeddings module
+--------------------------------------------------
+
+.. automodule:: extract_representations.vision_embeddings
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: extract_representations
+   :members:
+   :undoc-members:
+   :show-inheritance:

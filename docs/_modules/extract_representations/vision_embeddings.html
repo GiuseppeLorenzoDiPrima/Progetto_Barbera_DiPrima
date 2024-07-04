@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>extract_representations.vision_embeddings &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Progetto Barbera DiPrima
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Progetto completo</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Progetto Barbera DiPrima</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">extract_representations.vision_embeddings</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for extract_representations.vision_embeddings</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Third-party imports</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">ViTImageProcessor</span><span class="p">,</span> <span class="n">ViTModel</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">imblearn.over_sampling</span> <span class="kn">import</span> <span class="n">SMOTE</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">dump</span>
+
+<span class="c1"># Standard library imports</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="c1"># Local application/library specific imports</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">print_scree_graph</span>
+
+
+<span class="c1">#Prevents warnings from being printed during execution</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;transformers.modeling_utils&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">)</span>
+
+
+<span class="c1"># Class that defines the SVM dataset</span>
+<div class="viewcode-block" id="SVM_dataset">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.SVM_dataset">[docs]</a>
+<span class="k">class</span> <span class="nc">SVM_dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataset used by the svm model.</span>
+
+<span class="sd">    :param classes: List of class labels.</span>
+<span class="sd">    :type classes: List</span>
+<span class="sd">    :param targets: List of target values.</span>
+<span class="sd">    :type targets: List</span>
+<span class="sd">    :param path: Path to the dataset.</span>
+<span class="sd">    :type path: String</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="c1"># Set variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="n">classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="c1"># Inizialize variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_of_features</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_of_samples</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
+<span class="c1"># Class used to define embidding methods</span>
+<div class="viewcode-block" id="VisionEmbeddings">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings">[docs]</a>
+<span class="k">class</span> <span class="nc">VisionEmbeddings</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    This class is intended to extract embeddings from vision models.</span>
+<span class="sd">    It uses ViT (Vision Transformer) as a default model.</span>
+
+<span class="sd">    :param model_name: Name of the pre-trained ViT model.</span>
+<span class="sd">    :type : String</span>
+<span class="sd">    :param device: Device (e.g., &#39;cuda&#39; or &#39;cpu&#39;) for inference.</span>
+<span class="sd">    :type : String</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s1">&#39;google/vit-base-patch16-224&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">):</span>
+        <span class="c1"># Set model to extract embeddings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">ViTImageProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ViTModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="c1"># Set device and model name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
+        <span class="c1"># Set evaluation mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        
+    <span class="c1"># Denormalize the tensors normalized by the transoform function when loading the ChestXray dataset</span>
+<div class="viewcode-block" id="VisionEmbeddings.denormalize">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.denormalize">[docs]</a>
+    <span class="k">def</span> <span class="nf">denormalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Denormalizes a tensor using mean and standard deviation.</span>
+
+<span class="sd">        :param tensor: Input tensor.</span>
+<span class="sd">        :type tensor: torch.Tensor</span>
+<span class="sd">        :param mean: List of mean values.</span>
+<span class="sd">        :type mean: List</span>
+<span class="sd">        :param std: List of standard deviation values.</span>
+<span class="sd">        :type std: List</span>
+<span class="sd">        :return: Denormalized tensor.</span>
+<span class="sd">        :rtype: torch.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensor</span></div>
+
+    
+    <span class="c1"># Starting from a dataset of tensors, obtain the same dataset with features thanks to the embeddings method</span>
+<div class="viewcode-block" id="VisionEmbeddings.extract">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.extract">[docs]</a>
+    <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts embeddings from the dataset.</span>
+
+<span class="sd">        :param dataset: Input dataset.</span>
+<span class="sd">        :type dataset: SVM_dataset</span>
+<span class="sd">        :param dataset_type: Type of the dataset (e.g., &#39;train&#39;, &#39;test&#39;).</span>
+<span class="sd">        :type dataset_type: String</span>
+<span class="sd">        :return: New dataset with extracted features.</span>
+<span class="sd">        :rtype: SVM_dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create a new SVM_dataset object</span>
+        <span class="n">new_dataset</span> <span class="o">=</span> <span class="n">SVM_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">targets</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># For each element of the dataset</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Vision embeddings for &#39;</span> <span class="o">+</span> <span class="n">dataset_type</span><span class="p">)):</span>
+            <span class="c1"># Denormalize the image tensor</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">]</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">]</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">denormalize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+            <span class="c1"># Extract features from the denormalized tensor</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">,</span> <span class="n">do_rescale</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">tensor</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">last_hidden_state</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="c1"># Convert the result to a list</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">new_item</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;feature&#39;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+                <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="c1"># Adds the list containing the features</span>
+            <span class="n">new_dataset</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_item</span><span class="p">)</span>
+        <span class="c1"># Return dataset</span>
+        <span class="k">return</span> <span class="n">new_dataset</span></div>
+
+    
+    <span class="c1"># Gets features from the dataset</span>
+<div class="viewcode-block" id="VisionEmbeddings.get_features">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.get_features">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets features from the dataset.</span>
+
+<span class="sd">        :param dataset: Input dataset.</span>
+<span class="sd">        :type dataset: SVM_dataset</span>
+<span class="sd">        :return: Features as a numpy array.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Inizialize a list</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Add features to a list (list of list)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;feature&#39;</span><span class="p">])</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="c1"># Return features of the dataset</span>
+        <span class="k">return</span> <span class="n">features</span></div>
+
+        
+    <span class="c1"># Gets labels from the dataset</span>
+<div class="viewcode-block" id="VisionEmbeddings.get_labels">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.get_labels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets labels from the dataset.</span>
+
+<span class="sd">        :param dataset: Input dataset.</span>
+<span class="sd">        :type dataset: SVM_dataset</span>
+<span class="sd">        :return: List of labels.</span>
+<span class="sd">        :rtype: List</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Inizialize a list</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Add labels to a list</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+        <span class="c1"># Return labels of the dataset</span>
+        <span class="k">return</span> <span class="n">labels</span></div>
+
+    
+    <span class="c1"># Extracts the attributes of a dataset</span>
+<div class="viewcode-block" id="VisionEmbeddings.extract_from_dataset">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.extract_from_dataset">[docs]</a>
+    <span class="k">def</span> <span class="nf">extract_from_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts features, labels, number of samples and number of features from the dataset.</span>
+
+<span class="sd">        :param dataset: Input dataset.</span>
+<span class="sd">        :type dataset: SVM_dataset</span>
+<span class="sd">        :return: Features, labels, number of features, and number of samples.</span>
+<span class="sd">        :rtype: tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute attributes</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_features</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_labels</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="n">num_of_samples</span><span class="p">,</span> <span class="n">num_of_features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># Return attributes</span>
+        <span class="k">return</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">num_of_features</span><span class="p">,</span> <span class="n">num_of_samples</span></div>
+
+    
+    <span class="c1"># Calculate the new dataset obtained by starting from a dataset of tensors</span>
+<div class="viewcode-block" id="VisionEmbeddings.extract_single_dataset">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.extract_single_dataset">[docs]</a>
+    <span class="k">def</span> <span class="nf">extract_single_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">pca</span><span class="p">,</span> <span class="n">type_of_dataset</span><span class="p">,</span> <span class="n">create</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts features from a single dataset.</span>
+
+<span class="sd">        :param dataset: Input dataset.</span>
+<span class="sd">        :type dataset: SVM_dataset</span>
+<span class="sd">        :param pca: Principal Component Analysis object.</span>
+<span class="sd">        :type pca: PCA</span>
+<span class="sd">        :param type_of_dataset: Type of the dataset (e.g., &#39;train&#39;, &#39;test&#39;).</span>
+<span class="sd">        :type type_of_dataset: String</span>
+<span class="sd">        :param create: Create for scree graph.</span>
+<span class="sd">        :type create: Bool</span>
+<span class="sd">        :param view: View for scree graph.</span>
+<span class="sd">        :type view: Bool</span>
+<span class="sd">        :return: New dataset with transformed features.</span>
+<span class="sd">        :rtype: SVM_dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute attributes</span>
+        <span class="n">new_dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="n">type_of_dataset</span><span class="p">)</span>
+        <span class="n">new_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_dataset</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_dataset</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">,</span> <span class="n">new_dataset</span><span class="o">.</span><span class="n">num_of_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_from_dataset</span><span class="p">(</span><span class="n">new_dataset</span><span class="p">)</span>
+        <span class="c1"># Dimensionality reduction</span>
+        <span class="n">new_dataset</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_dataset</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+        <span class="c1"># Re-compute attributes</span>
+        <span class="n">new_dataset</span><span class="o">.</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="n">new_dataset</span><span class="o">.</span><span class="n">num_of_features</span> <span class="o">=</span> <span class="n">new_dataset</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="c1"># Create scree graph</span>
+            <span class="n">print_scree_graph</span><span class="p">(</span><span class="n">pca</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+        <span class="c1"># Return dataset</span>
+        <span class="k">return</span> <span class="n">new_dataset</span></div>
+
+
+    <span class="c1"># Calculate all new datasets obtained by starting from datasets of tensors</span>
+<div class="viewcode-block" id="VisionEmbeddings.extract_all_datasets">
+<a class="viewcode-back" href="../../extract_representations.html#extract_representations.vision_embeddings.VisionEmbeddings.extract_all_datasets">[docs]</a>
+    <span class="k">def</span> <span class="nf">extract_all_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train</span><span class="p">,</span> <span class="n">validation</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">create</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts the training, validation, and test datasets, applies PCA, and performs oversampling.</span>
+
+<span class="sd">        :param train: Training dataset.</span>
+<span class="sd">        :type train: SVM_dataset</span>
+<span class="sd">        :param validation: Validation dataset.</span>
+<span class="sd">        :type validation: SVM_dataset</span>
+<span class="sd">        :param test: Test dataset.</span>
+<span class="sd">        :type test: SVM_dataset</span>
+<span class="sd">        :param num_features: Number of components to retain after PCA.</span>
+<span class="sd">        :type num_features: Int</span>
+<span class="sd">        :param path: Path to save the PCA object.</span>
+<span class="sd">        :type path: String</span>
+<span class="sd">        :param create: Create for the scree graph.</span>
+<span class="sd">        :type create: Bool</span>
+<span class="sd">        :param view: View for the scree graph.</span>
+<span class="sd">        :type view: Bool</span>
+<span class="sd">        :return: New training, validation, and test datasets with transformed features.</span>
+<span class="sd">        :rtype: tuple (new_train, new_validation, new_test)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Extract the three sets</span>
+        <span class="n">new_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+        <span class="n">new_validation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">validation</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="s1">&#39;validation&#39;</span><span class="p">)</span>
+        <span class="n">new_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">dataset_type</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">)</span>
+        <span class="c1"># Compute attributes for the three datasets</span>
+        <span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_from_dataset</span><span class="p">(</span><span class="n">new_train</span><span class="p">)</span>
+        <span class="n">new_validation</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_validation</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">,</span> <span class="n">new_validation</span><span class="o">.</span><span class="n">num_of_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_from_dataset</span><span class="p">(</span><span class="n">new_validation</span><span class="p">)</span>
+        <span class="n">new_test</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_test</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">,</span> <span class="n">new_test</span><span class="o">.</span><span class="n">num_of_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_from_dataset</span><span class="p">(</span><span class="n">new_test</span><span class="p">)</span>
+        <span class="c1"># --- PCA ---</span>
+        <span class="c1"># Set the number of components to keep after PCA</span>
+        <span class="n">n_components</span> <span class="o">=</span> <span class="n">num_features</span>
+        <span class="c1"># Create a PCA object</span>
+        <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">)</span>
+        <span class="c1"># Fit PCA to training data</span>
+        <span class="n">pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+        <span class="c1"># Transform all three datasets</span>
+        <span class="n">new_train</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+        <span class="n">new_validation</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_validation</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+        <span class="n">new_test</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">new_test</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+            <span class="c1"># Create scree graph</span>
+            <span class="n">print_scree_graph</span><span class="p">(</span><span class="n">pca</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+        
+        <span class="c1"># --- Oversampling ---</span>
+        <span class="c1"># Create the smote object</span>
+        <span class="n">smote</span> <span class="o">=</span> <span class="n">SMOTE</span><span class="p">()</span>
+        <span class="c1"># Oversample the training dataset</span>
+        <span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">smote</span><span class="o">.</span><span class="n">fit_resample</span><span class="p">(</span><span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="c1"># Re-compute attributes for the three datasets</span>
+        <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="n">new_train</span><span class="o">.</span><span class="n">num_of_features</span> <span class="o">=</span> <span class="n">new_train</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">new_validation</span><span class="o">.</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="n">new_validation</span><span class="o">.</span><span class="n">num_of_features</span> <span class="o">=</span> <span class="n">new_validation</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">new_test</span><span class="o">.</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="n">new_test</span><span class="o">.</span><span class="n">num_of_features</span> <span class="o">=</span> <span class="n">new_test</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># Store the pca object in the &quot;../pca.joblib&quot; file</span>
+        <span class="n">dump</span><span class="p">(</span><span class="n">pca</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/pca.joblib&quot;</span><span class="p">)</span>
+        <span class="c1"># Return new datasets</span>
+        <span class="k">return</span> <span class="n">new_train</span><span class="p">,</span> <span class="n">new_validation</span><span class="p">,</span> <span class="n">new_test</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

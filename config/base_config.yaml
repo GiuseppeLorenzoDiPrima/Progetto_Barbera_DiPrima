@@ -1,14 +1,16 @@
 data:
-  data_dir: dataset//chest_xray//
+  data_dir: dataset//chest_xray// # Folder containing the dataset
+  strength_of_oversampling: 1 # Used for oversampling in the case of deep learning models
+  principal_component: 8 # Number of features after PCA
 
 training:
-  epochs: 20
-  batch_size: 32
+  epochs: 20 # The SVM model receives twice as many epochs as deep learning models (epochs you set)
+  batch_size: 32 # Used for training in the case of deep learning models
   learning_rate: 0.001 
   optimizer: adam # Choose one: adam, sgd or rmsprop
-  warmup_ratio: 0.1 
-  checkpoint_dir: checkpoints/
-  device: cuda
+  warmup_ratio: 0.1 # Used for faster convergence
+  checkpoint_dir: checkpoints/ # Folder containing best models found during training
+  device: cuda # Choose one: cuda or cpu
   evaluation_metric: accuracy # Choose one: accuracy, precision, recall, f1 or loss
   best_metric_lower_is_better: false # Choose one: true or false
   early_stopping_metric: loss # Choose one: accuracy, precision, recall, f1 or loss

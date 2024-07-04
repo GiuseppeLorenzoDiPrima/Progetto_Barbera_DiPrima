@@ -10,4 +10,6 @@ matplotlib
 pandas
 shutil
 seaborn
-tkinter
+transformers
+logging
+joblib

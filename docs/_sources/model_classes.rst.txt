@@ -1,0 +1,37 @@
+model\_classes package
+======================
+
+Submodules
+----------
+
+model\_classes.alexnet\_model module
+------------------------------------
+
+.. automodule:: model_classes.alexnet_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model\_classes.resnet\_model module
+-----------------------------------
+
+.. automodule:: model_classes.resnet_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model\_classes.svm\_model module
+--------------------------------
+
+.. automodule:: model_classes.svm_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: model_classes
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utils module &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="train module" href="train.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Progetto Barbera DiPrima
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Progetto completo</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data_classes.html">data_classes package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extract_representations.html">extract_representations package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_classes.html">model_classes package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="test.html">test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="train.html">train module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utils.compare_performance"><code class="docutils literal notranslate"><span class="pre">compare_performance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.compute_metrics"><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.evaluate_svm"><code class="docutils literal notranslate"><span class="pre">evaluate_svm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_best_val_metrics"><code class="docutils literal notranslate"><span class="pre">print_best_val_metrics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_compare_graph"><code class="docutils literal notranslate"><span class="pre">print_compare_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_confusion_matrix"><code class="docutils literal notranslate"><span class="pre">print_confusion_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_confusion_matrix_graph"><code class="docutils literal notranslate"><span class="pre">print_confusion_matrix_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_evaluation"><code class="docutils literal notranslate"><span class="pre">print_evaluation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_metrics_graph"><code class="docutils literal notranslate"><span class="pre">print_metrics_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.print_scree_graph"><code class="docutils literal notranslate"><span class="pre">print_scree_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils.save_graph"><code class="docutils literal notranslate"><span class="pre">save_graph()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Progetto Barbera DiPrima</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Progetto completo</a></li>
+      <li class="breadcrumb-item active">utils module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-utils">
+<span id="utils-module"></span><h1>utils module<a class="headerlink" href="#module-utils" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.compare_performance">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">compare_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">svm_metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#compare_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.compare_performance" title="Link to this definition"></a></dt>
+<dd><p>Compares the performance of the three models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_metrics</strong> (<em>List</em>) – The metrics of the ResNet model.</p></li>
+<li><p><strong>first_metrics</strong> – The metrics of the AlexNet model.</p></li>
+<li><p><strong>second_metrics</strong> (<em>List</em>) – The metrics of the SVM model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.compute_metrics">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">compute_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">references</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#compute_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.compute_metrics" title="Link to this definition"></a></dt>
+<dd><p>Computes accuracy, precision, recall, and F1 score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictions</strong> (<em>List</em>) – The predicted labels.</p></li>
+<li><p><strong>references</strong> (<em>List</em>) – The true labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the accuracy, precision, recall, and F1 score.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.evaluate">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.evaluate" title="Link to this definition"></a></dt>
+<dd><p>Evaluates a model on a given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – The model to be evaluated.</p></li>
+<li><p><strong>dataloader</strong> (<em>torch.utils.data.DataLoader</em>) – The DataLoader for the dataset.</p></li>
+<li><p><strong>criterion</strong> (<em>torch.nn.modules.loss._Loss</em>) – The criterion to use for calculating loss during evaluation.</p></li>
+<li><p><strong>device</strong> (<em>String</em>) – The device on which to evaluate the model (e.g., ‘cpu’, ‘cuda’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the evaluation metrics and confusion matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (dict, numpy.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.evaluate_svm">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_svm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#evaluate_svm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.evaluate_svm" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the SVM model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>SVM class</em>) – The SVM model.</p></li>
+<li><p><strong>test_set</strong> (<a class="reference internal" href="extract_representations.html#extract_representations.vision_embeddings.SVM_dataset" title="extract_representations.vision_embeddings.SVM_dataset"><em>SVM_dataset</em></a>) – The test dataset.</p></li>
+<li><p><strong>criterion</strong> (<em>Function</em>) – The loss function to use for evaluation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Test metrics and confusion matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple (test_metrics, conf_matrix)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_best_val_metrics">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_best_val_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_val_metric</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_best_val_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_best_val_metrics" title="Link to this definition"></a></dt>
+<dd><p>Prints the best model performance on the validation dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_model</strong> (<em>String</em>) – The type of the model.</p></li>
+<li><p><strong>best_val_metric</strong> (<em>Dictionary</em>) – The best validation metrics.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_compare_graph">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_compare_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">svm_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_compare_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_compare_graph" title="Link to this definition"></a></dt>
+<dd><p>Prints a comparison graph of the metrics for three models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_metrics</strong> (<em>List</em>) – The metrics of the ResNet model.</p></li>
+<li><p><strong>second_metrics</strong> (<em>List</em>) – The metrics of the AlexNet model.</p></li>
+<li><p><strong>second_metrics</strong> – The metrics of the SVM model.</p></li>
+<li><p><strong>view</strong> (<em>Bool</em>) – Whether to display the plot.</p></li>
+<li><p><strong>test</strong> (<em>Bool</em>) – Whether the model is in the testing phase.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_confusion_matrix">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_confusion_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_confusion_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_confusion_matrix" title="Link to this definition"></a></dt>
+<dd><p>Prints a confusion matrix for a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conf_matrix</strong> (<em>Numpy.ndarray</em>) – The confusion matrix to print.</p></li>
+<li><p><strong>type_model</strong> (<em>String</em>) – The type of the model (e.g., ‘ResNet’, ‘AlexNet’, ‘SVM’).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_confusion_matrix_graph">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_confusion_matrix_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_confusion_matrix_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_confusion_matrix_graph" title="Link to this definition"></a></dt>
+<dd><p>Prints a confusion matrix graph for a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conf_matrix</strong> (<em>numpy.ndarray</em>) – The confusion matrix to plot.</p></li>
+<li><p><strong>view</strong> (<em>bool</em>) – Whether to display the plot.</p></li>
+<li><p><strong>type_model</strong> (<em>String</em>) – The type of the model (e.g., ‘ResNet’, ‘AlexNet’, ‘SVM’).</p></li>
+<li><p><strong>test</strong> (<em>Bool</em>) – Whether the model is in the testing phase.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_evaluation">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_evaluation" title="Link to this definition"></a></dt>
+<dd><p>Prints the evaluation metrics and returns them as a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>test_metrics</strong> (<em>Dictionary</em>) – The test metrics.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The test metrics as a list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_metrics_graph">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_metrics_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_plotted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_metrics_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_metrics_graph" title="Link to this definition"></a></dt>
+<dd><p>Prints the graph of a given metric for the training and validation datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>training_metrics</strong> (<em>List</em>) – The training metrics.</p></li>
+<li><p><strong>validation_metrics</strong> (<em>List</em>) – The validation metrics.</p></li>
+<li><p><strong>metric_plotted</strong> (<em>String</em>) – The metric to be plotted.</p></li>
+<li><p><strong>view</strong> (<em>bool</em>) – Whether to display the plot.</p></li>
+<li><p><strong>type_model</strong> (<em>String</em>) – The type of the model (e.g., ‘ResNet’, ‘AlexNet’, ‘SVM’).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.print_scree_graph">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">print_scree_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#print_scree_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.print_scree_graph" title="Link to this definition"></a></dt>
+<dd><p>Prints the scree graph of the PCA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pca</strong> (<em>PCA</em>) – The PCA object.</p></li>
+<li><p><strong>test</strong> (<em>Bool</em>) – Whether it’s a test or not.</p></li>
+<li><p><strong>view</strong> (<em>Bool</em>) – Whether to view the graph or not.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.save_graph">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">save_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_of_graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#save_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.save_graph" title="Link to this definition"></a></dt>
+<dd><p>Saves a graph to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>String</em>) – The name of the file to save the graph to.</p></li>
+<li><p><strong>type_of_graph</strong> (<em>String</em>) – The type of the graph (e.g., ‘Testing result’, ‘Compare performance’).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="train.html" class="btn btn-neutral float-left" title="train module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

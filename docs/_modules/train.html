@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>train &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Progetto Barbera DiPrima
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Progetto Barbera DiPrima</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">train</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for train</h1><div class="highlight"><pre>
+<span></span><span class="c1">#-----  Command to run from terminal  -----#</span>
+<span class="c1"># python -u train.py -c config/base_config.yaml</span>
+
+<span class="c1"># Documentation command [execute in path &quot;..\docs&quot;]: .\make.bat html</span>
+
+<span class="c1"># Standard library imports</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="c1"># Third-party imports</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">dump</span>
+
+<span class="c1"># Configuration and utility imports</span>
+<span class="kn">from</span> <span class="nn">yaml_config_override</span> <span class="kn">import</span> <span class="n">add_arguments</span>
+<span class="kn">from</span> <span class="nn">addict</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="c1"># Local application/library specific imports</span>
+<span class="kn">from</span> <span class="nn">data_classes.manage_dataset</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">model_classes.resnet_model</span> <span class="kn">import</span> <span class="n">ResNet</span><span class="p">,</span> <span class="n">ResidualBlock</span>
+<span class="kn">from</span> <span class="nn">model_classes.alexnet_model</span> <span class="kn">import</span> <span class="n">AlexNet</span>
+<span class="kn">from</span> <span class="nn">model_classes.svm_model</span> <span class="kn">import</span> <span class="n">SVM</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">extract_representations.vision_embeddings</span> <span class="kn">import</span> <span class="n">VisionEmbeddings</span>
+
+
+<span class="c1"># Train a training epoch</span>
+<div class="viewcode-block" id="train_one_epoch">
+<a class="viewcode-back" href="../train.html#train.train_one_epoch">[docs]</a>
+<span class="k">def</span> <span class="nf">train_one_epoch</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trains a model for one epoch.</span>
+
+<span class="sd">    :param model: The model to be trained.</span>
+<span class="sd">    :type model: torch.nn.Module</span>
+<span class="sd">    :param dataloader: The DataLoader for the training dataset.</span>
+<span class="sd">    :type dataloader: torch.utils.data.DataLoader</span>
+<span class="sd">    :param criterion: The criterion to use for calculating loss during training.</span>
+<span class="sd">    :type criterion: torch.nn.modules.loss._Loss</span>
+<span class="sd">    :param optimizer: The optimizer to use for updating the model parameters.</span>
+<span class="sd">    :type optimizer: torch.optim.Optimizer</span>
+<span class="sd">    :param scheduler: The learning rate scheduler.</span>
+<span class="sd">    :type scheduler: torch.optim.lr_scheduler._LRScheduler</span>
+<span class="sd">    :param device: The device on which to train the model (e.g., &#39;cpu&#39;, &#39;cuda&#39;).</span>
+<span class="sd">    :type device: str</span>
+<span class="sd">    :return: Returns a dictionary containing the performance metrics of the training dataset.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Set the model to training mode</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span> 
+    <span class="c1"># Inizialize variables</span>
+    <span class="n">running_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">references</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Batch execution</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training&#39;</span><span class="p">)):</span>
+        <span class="c1"># Upload images and labels</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="c1"># Erasing old gradient values</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="c1"># Calculate output</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+        <span class="c1"># Calculate the loss through the previously chosen loss function</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="c1"># Calculate the gradient</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="c1"># Optimization</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="c1"># Scheduler learning rate</span>
+        <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="c1"># Add the current loss to the total</span>
+        <span class="n">running_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="c1"># Compute predictions</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">predictions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+        <span class="c1"># Compute refereces</span>
+        <span class="n">references</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+    <span class="c1"># Compute performance metrics based on differences between predictiones and references </span>
+    <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">references</span><span class="p">)</span>
+    <span class="c1"># Add loss to performance metrics</span>
+    <span class="n">train_metrics</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">running_loss</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span>
+    <span class="c1"># Return performance metrics</span>
+    <span class="k">return</span> <span class="n">train_metrics</span></div>
+
+
+<span class="c1"># Manage best model and best validation metrics</span>
+<div class="viewcode-block" id="manage_best_model_and_metrics">
+<a class="viewcode-back" href="../train.html#train.manage_best_model_and_metrics">[docs]</a>
+<span class="k">def</span> <span class="nf">manage_best_model_and_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">evaluation_metric</span><span class="p">,</span> <span class="n">val_metrics</span><span class="p">,</span> <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">lower_is_better</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages the best model and its metrics.</span>
+
+<span class="sd">    :param model: The current model.</span>
+<span class="sd">    :type model: torch.nn.Module</span>
+<span class="sd">    :param evaluation_metric: The metric against which to determine the best model.</span>
+<span class="sd">    :type evaluation_metric: str</span>
+<span class="sd">    :param val_metrics: The validation metrics of the current model.</span>
+<span class="sd">    :type val_metrics: dict</span>
+<span class="sd">    :param best_val_metric: The best validation metrics so far.</span>
+<span class="sd">    :type best_val_metric: dict</span>
+<span class="sd">    :param best_model: The best model so far.</span>
+<span class="sd">    :type best_model: torch.nn.Module</span>
+<span class="sd">    :param lower_is_better: Whether a lower metric value is better.</span>
+<span class="sd">    :type lower_is_better: bool</span>
+<span class="sd">    :return: Returns the best validation metrics and the best model.</span>
+<span class="sd">    :rtype: tuple (dict, torch.nn.Module)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Based on the evaluation metric you choose, evaluate whether the current one is higher or not</span>
+    <span class="k">if</span> <span class="n">lower_is_better</span><span class="p">:</span>
+        <span class="n">is_best</span> <span class="o">=</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_best</span> <span class="o">=</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
+        <span class="c1"># Verify the model for which a new best model has been found</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;&lt;class </span><span class="se">\&#39;</span><span class="s1">model_classes.resnet_model.ResNet</span><span class="se">\&#39;</span><span class="s1">&gt;&#39;</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New best ResNet model found with val </span><span class="si">{</span><span class="n">evaluation_metric</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;&lt;class </span><span class="se">\&#39;</span><span class="s1">model_classes.alexnet_model.AlexNet</span><span class="se">\&#39;</span><span class="s1">&gt;&#39;</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New best AlexNet model found with val </span><span class="si">{</span><span class="n">evaluation_metric</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New best SVM model found with val </span><span class="si">{</span><span class="n">evaluation_metric</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="n">evaluation_metric</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Store the new best validation metrics and the new best model</span>
+        <span class="n">best_val_metric</span> <span class="o">=</span> <span class="n">val_metrics</span>
+        <span class="n">best_model</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">return</span> <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span></div>
+
+
+<span class="c1"># Train deep learning models</span>
+<div class="viewcode-block" id="train_model">
+<a class="viewcode-back" href="../train.html#train.train_model">[docs]</a>
+<span class="k">def</span> <span class="nf">train_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">criterion</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function trains a model given a training dataset, a device, and a criterion.</span>
+
+<span class="sd">    :param model: The model to be trained.</span>
+<span class="sd">    :type model: torch.nn.Module</span>
+<span class="sd">    :param config: The configuration for training the model.</span>
+<span class="sd">    :type config: Config</span>
+<span class="sd">    :param train_dl: The DataLoader for the training dataset.</span>
+<span class="sd">    :type train_dl: torch.utils.data.DataLoader</span>
+<span class="sd">    :param device: The device on which to train the model (e.g., &#39;cpu&#39;, &#39;cuda&#39;).</span>
+<span class="sd">    :type device: str</span>
+<span class="sd">    :param criterion: The criterion to use for calculating loss during training.</span>
+<span class="sd">    :type criterion: torch.nn.modules.loss._Loss</span>
+<span class="sd">    :return: Returns the best validation metric, the best model, the list of training metrics, and the list of validation metrics.</span>
+<span class="sd">    :rtype: tuple (dict, torch.nn.Module, list, list)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initializing variables</span>
+    <span class="n">training_metrics_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">validation_metrics_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Identify the model</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;&lt;class </span><span class="se">\&#39;</span><span class="s1">model_classes.resnet_model.ResNet</span><span class="se">\&#39;</span><span class="s1">&gt;&#39;</span><span class="p">:</span>
+        <span class="n">string_model</span> <span class="o">=</span> <span class="s2">&quot;ResNet model -&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">string_model</span> <span class="o">=</span> <span class="s2">&quot;AlexNet model -&quot;</span>
+    <span class="c1"># Select the optimization algorithm based on the configuration chosen in the config</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;adam&#39;</span><span class="p">:</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;sgd&#39;</span><span class="p">:</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">RMSprop</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
+    <span class="c1"># learning rate scheduler</span>
+    <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_dl</span><span class="p">)</span> <span class="o">*</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span>
+    <span class="n">warmup_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_steps</span> <span class="o">*</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">warmup_ratio</span><span class="p">)</span>
+    <span class="c1"># Warmup for [warmup_ratio]% and linear decay</span>
+    <span class="n">scheduler_lambda</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">step</span><span class="p">:</span> <span class="p">(</span><span class="n">step</span> <span class="o">/</span> <span class="n">warmup_steps</span><span class="p">)</span> <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">warmup_steps</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">total_steps</span> <span class="o">-</span> <span class="n">step</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_steps</span> <span class="o">-</span> <span class="n">warmup_steps</span><span class="p">))</span>
+    <span class="n">scheduler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">LambdaLR</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">lr_lambda</span><span class="o">=</span><span class="n">scheduler_lambda</span><span class="p">)</span>
+    <span class="c1"># Initialization of the dictionary that contains performance metrics</span>
+    <span class="n">best_val_metric</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;accuracy&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;recall&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;f1&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">}</span>
+    <span class="c1"># Initializing the best performance metrics and the other variables</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">best_metric_lower_is_better</span><span class="p">:</span>
+        <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span>
+    <span class="n">best_model</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_valid_epochs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Training cycle that iterates through all epochs</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> Epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">string_model</span><span class="p">,</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span><span class="p">))</span>
+        <span class="c1"># Train an epoch and calculate performance on training</span>
+        <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">train_one_epoch</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="c1"># Add the performance to the list that will contain the history of all the training performance</span>
+        <span class="n">training_metrics_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">)</span>
+        <span class="c1"># Calculate performance on validation</span>
+        <span class="n">val_metrics</span><span class="p">,</span> <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">val_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="c1"># Add the performance to the list that will contain the history of all the validation performance</span>
+        <span class="n">validation_metrics_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_metrics</span><span class="p">)</span>
+        <span class="c1"># Print results</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Train loss: </span><span class="si">{</span><span class="n">train_metrics</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> - Train accuracy: </span><span class="si">{</span><span class="n">train_metrics</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Val loss: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> - Val accuracy: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Calculates the new best model and new best performance as a result of the last training</span>
+        <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span> <span class="o">=</span> <span class="n">manage_best_model_and_metrics</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> 
+            <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="p">,</span> 
+            <span class="n">val_metrics</span><span class="p">,</span> 
+            <span class="n">best_val_metric</span><span class="p">,</span> 
+            <span class="n">best_model</span><span class="p">,</span> 
+            <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">best_metric_lower_is_better</span>
+        <span class="p">)</span>
+        <span class="c1"># Earling stopping</span>
+        <span class="c1"># Check which metric was chosen for early stopping</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;loss&#39;</span><span class="p">:</span>
+            <span class="c1"># If performance is not improved, the early stopping counter increases by one</span>
+            <span class="k">if</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">&gt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+                <span class="n">no_valid_epochs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If performance is not improved, the early stopping counter increases by one</span>
+            <span class="k">if</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+                <span class="n">no_valid_epochs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># If you have reached the maximum value chosen through the config file, end the training</span>
+        <span class="k">if</span> <span class="n">no_valid_epochs</span> <span class="o">==</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">earling_stopping_max_no_valid_epochs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The training process has ended because the maximum value of early stopping, which is </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">earling_stopping_max_no_valid_epochs</span><span class="si">:}</span><span class="s2">, has been reached.&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+    <span class="c1"># Returns the best metrics, best model, and performance history for training and validation</span>
+    <span class="k">return</span> <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">training_metrics_list</span><span class="p">,</span> <span class="n">validation_metrics_list</span></div>
+
+
+<span class="c1"># Evaluate the performance of the model on the incoming passed dataset</span>
+<div class="viewcode-block" id="evaluate_model">
+<a class="viewcode-back" href="../train.html#train.evaluate_model">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_model</span><span class="p">(</span><span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">type_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function evaluates the best model on a test dataset.</span>
+
+<span class="sd">    :param best_val_metric: The best validation metric obtained during training.</span>
+<span class="sd">    :type best_val_metric: dict</span>
+<span class="sd">    :param best_model: The best model obtained during training.</span>
+<span class="sd">    :type best_model: torch.nn.Module</span>
+<span class="sd">    :param test_set: Dataloader or SVM dataset based on the model</span>
+<span class="sd">    :type test_set: torch.utils.data.DataLoader or test_svm</span>
+<span class="sd">    :param criterion: The criterion to use for calculating loss during evaluation.</span>
+<span class="sd">    :type criterion: torch.nn.modules.loss._Loss or Funcion</span>
+<span class="sd">    :param device: The device on which to evaluate the model (e.g., &#39;cpu&#39;, &#39;cuda&#39;).</span>
+<span class="sd">    :type device: str</span>
+<span class="sd">    :param type_model: The type of the model (e.g., &#39;ResNet&#39;, &#39;AlexNet&#39;).</span>
+<span class="sd">    :type type_model: str</span>
+<span class="sd">    :return: Returns the metrics and confusion matrix for the test dataset.</span>
+<span class="sd">    :rtype: tuple (list, numpy.ndarray)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="n">print_best_val_metrics</span><span class="p">(</span><span class="n">type_model</span><span class="p">,</span> <span class="n">best_val_metric</span><span class="p">)</span>
+    <span class="c1"># Evaluate the performance of the test_dataset</span>
+    <span class="c1"># SVM model</span>
+    <span class="k">if</span> <span class="n">type_model</span> <span class="o">==</span> <span class="s1">&#39;SVM&#39;</span><span class="p">:</span>
+        <span class="n">test_metrics</span><span class="p">,</span> <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">evaluate_svm</span><span class="p">(</span><span class="n">best_model</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">criterion</span><span class="p">)</span>
+    <span class="c1"># Deep learning models</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">test_metrics</span><span class="p">,</span> <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">best_model</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+    <span class="c1"># Compute performance metrics</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">print_evaluation</span><span class="p">(</span><span class="n">test_metrics</span><span class="p">)</span>
+    <span class="c1"># Return performance metrics and confusion matrix</span>
+    <span class="k">return</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">conf_matrix</span></div>
+
+
+<span class="c1"># Train svm model</span>
+<div class="viewcode-block" id="train_smv_model">
+<a class="viewcode-back" href="../train.html#train.train_smv_model">[docs]</a>
+<span class="k">def</span> <span class="nf">train_smv_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train</span><span class="p">,</span> <span class="n">validation</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">criterion</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trains the SVM model, evaluates it applying early stopping and scheduler learning rate.</span>
+
+<span class="sd">    :param model: The SVM model to be trained.</span>
+<span class="sd">    :type model: SVM class</span>
+<span class="sd">    :param train: The training dataset.</span>
+<span class="sd">    :type train: SVM_dataset</span>
+<span class="sd">    :param validation: The validation dataset.</span>
+<span class="sd">    :type validation: SVM_dataset</span>
+<span class="sd">    :param config: The configuration settings.</span>
+<span class="sd">    :type config: Dict(add_arguments())</span>
+<span class="sd">    :param criterion: The loss function to use.</span>
+<span class="sd">    :type criterion: Function</span>
+<span class="sd">    :return: The best validation metrics, the best model, and the lists of training and validation metrics.</span>
+<span class="sd">    :rtype: Tuple (best_val_metric, best_model, training_metrics_list, validation_metrics_list)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initializing the best performance metrics and the other variables</span>
+    <span class="n">training_metrics_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">validation_metrics_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">best_val_metric</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;accuracy&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;recall&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;f1&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">}</span>
+    <span class="n">best_model</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_valid_epochs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">best_metric_lower_is_better</span><span class="p">:</span>
+        <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span>
+    <span class="c1"># Print some statistics</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Samples: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">num_of_samples</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; - Features: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># For epochs in range (0, number of total epochs * 2)</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span> <span class="o">*</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SVM model - Epoch </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="c1"># Scheduler learning rate</span>
+        <span class="n">learning_rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">500</span> <span class="o">+</span> <span class="p">((</span><span class="n">epoch</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)))</span>
+        <span class="c1"># Train an epoch and calculate performance on training</span>
+        <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">)</span>
+        <span class="c1"># Add the performance to the list that will contain the history of all the training performance</span>
+        <span class="n">training_metrics_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">)</span>
+        <span class="c1"># Calculate performance on validation</span>
+        <span class="n">val_metrics</span><span class="p">,</span> <span class="n">conf_matrix</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate_svm</span><span class="p">(</span><span class="n">validation</span><span class="p">,</span> <span class="n">criterion</span><span class="p">)</span>
+        <span class="c1"># Add the performance to the list that will contain the history of all the validation performance</span>
+        <span class="n">validation_metrics_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_metrics</span><span class="p">)</span>
+        <span class="c1"># Print results</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Train loss: </span><span class="si">{</span><span class="n">train_metrics</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> - Train accuracy: </span><span class="si">{</span><span class="n">train_metrics</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Val loss: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> - Val accuracy: </span><span class="si">{</span><span class="n">val_metrics</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Calculates the new best model and new best performance as a result of the last training</span>
+        <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span> <span class="o">=</span> <span class="n">manage_best_model_and_metrics</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> 
+            <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">evaluation_metric</span><span class="p">,</span> 
+            <span class="n">val_metrics</span><span class="p">,</span> 
+            <span class="n">best_val_metric</span><span class="p">,</span> 
+            <span class="n">best_model</span><span class="p">,</span> 
+            <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">best_metric_lower_is_better</span>
+        <span class="p">)</span>
+        <span class="c1"># Early stopping</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;loss&#39;</span><span class="p">:</span>
+            <span class="c1"># If performance is not improved, the early stopping counter increases by one</span>
+            <span class="k">if</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">&gt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+                <span class="n">no_valid_epochs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If performance is not improved, the early stopping counter increases by one</span>
+            <span class="k">if</span> <span class="n">val_metrics</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="n">best_val_metric</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()]:</span>
+                <span class="n">no_valid_epochs</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># If you have reached the maximum value chosen through the config file, end the training</span>
+        <span class="k">if</span> <span class="n">no_valid_epochs</span> <span class="o">==</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">earling_stopping_max_no_valid_epochs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The training process has ended because the maximum value of early stopping, which is </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">earling_stopping_max_no_valid_epochs</span><span class="si">:}</span><span class="s2">, has been reached.&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">best_val_metric</span><span class="p">,</span> <span class="n">best_model</span><span class="p">,</span> <span class="n">training_metrics_list</span><span class="p">,</span> <span class="n">validation_metrics_list</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main script for training and evaluating the models.</span>
+
+<span class="sd">    The script performs the following steps:</span>
+<span class="sd">    1. Parse the configuration.</span>
+<span class="sd">    2. Set the device for training.</span>
+<span class="sd">    3. Load the data.</span>
+<span class="sd">    4. Load the models.</span>
+<span class="sd">    5. Train the models.</span>
+<span class="sd">    6. Evaluate the models on the test set.</span>
+<span class="sd">    7. Compare the performance of the models.</span>
+<span class="sd">    8. Save the models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 1. Parse configuration</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Configuration parameters</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span><span class="n">add_arguments</span><span class="p">())</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 2. Device configuration</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Selecting the device to run with: CUDA -&gt; GPU; CPU -&gt; CPU</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Device: &quot;</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">get_device_name</span><span class="p">())</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 3. Load data</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Create the dataset items based on the type of classification choosen</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
+        <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">binary_load</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>    
+        <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">ternary_load</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        
+    <span class="c1"># Use vision embedding to create features from tensor for SVM model</span>
+    <span class="n">vision_embeddings</span> <span class="o">=</span> <span class="n">VisionEmbeddings</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s1">&#39;google/vit-base-patch16-224&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Vision embeddings for SVM:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Extract new dataset using embeddings</span>
+    <span class="n">train_svm</span><span class="p">,</span> <span class="n">validation_svm</span><span class="p">,</span> <span class="n">test_svm</span> <span class="o">=</span> <span class="n">vision_embeddings</span><span class="o">.</span><span class="n">extract_all_datasets</span><span class="p">(</span>
+        <span class="n">train_dataset</span><span class="p">,</span>
+        <span class="n">val_dataset</span><span class="p">,</span>
+        <span class="n">test_dataset</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">principal_component</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_model_graph</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># --- Oversampling for deep learning models ---</span>
+    <span class="c1"># Compute class count for each class</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">train_dataset</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+    <span class="n">class_counts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+    <span class="c1"># Compute weights for each class [weight is inversely proportional to class_count]</span>
+    <span class="n">class_weights</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">class_counts</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+    <span class="c1"># Give a sample the weight of its class</span>
+    <span class="n">sample_weights</span> <span class="o">=</span> <span class="n">class_weights</span><span class="p">[</span><span class="n">train_dataset</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span> <span class="o">*</span> <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">strength_of_oversampling</span>
+    <span class="c1"># Create a bilanced sampler</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">sample_weights</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_weights</span><span class="p">),</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># Loading the train_dataset</span>
+    <span class="n">train_dl</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">train_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># Shuffling is mutually exclusive with sampler</span>
+        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Loading the train_dataset</span>
+    <span class="n">val_dl</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">val_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># Without shuffling the data</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Loading the train_dataset</span>
+    <span class="n">test_dl</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">test_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># Without shuffling the data</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 4. Load model</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Load the templates and specify their configuration through the config variable</span>
+    
+    <span class="c1"># ResNet model</span>
+    <span class="n">first_model</span> <span class="o">=</span> <span class="n">ResNet</span><span class="p">(</span>
+        <span class="n">ResidualBlock</span><span class="p">,</span>
+        <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">channels_of_color</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">planes</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">in_features</span>
+    <span class="p">)</span>
+    <span class="n">first_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    
+    <span class="c1"># AlexNet model</span>
+    <span class="n">second_model</span> <span class="o">=</span> <span class="n">AlexNet</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">channels_of_color</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">inplace</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">second_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    
+    <span class="c1"># SVM model</span>
+    <span class="n">svm_model</span> <span class="o">=</span> <span class="n">SVM</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">train_svm</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">)</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 5. Train model</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Set up loss function</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+    <span class="n">criterion_svm</span> <span class="o">=</span> <span class="n">svm_model</span><span class="o">.</span><span class="n">hinge_loss</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training deep learning models:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Train the ResNet model</span>
+    <span class="n">first_best_val_metric</span><span class="p">,</span> <span class="n">first_best_model</span><span class="p">,</span> <span class="n">first_training_metrics</span><span class="p">,</span> <span class="n">first_validation_metrics</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">first_model</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">criterion</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="c1"># Train the AlexNet model</span>
+    <span class="n">second_best_val_metric</span><span class="p">,</span> <span class="n">second_best_model</span><span class="p">,</span> <span class="n">second_training_metrics</span><span class="p">,</span> <span class="n">second_validation_metrics</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">(</span><span class="n">second_model</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">train_dl</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">criterion</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training SVM model:&quot;</span><span class="p">)</span>
+    <span class="c1"># Train SVM model</span>
+    <span class="n">best_val_metric_svm</span><span class="p">,</span> <span class="n">best_model_svm</span><span class="p">,</span> <span class="n">train_metrics_svm</span><span class="p">,</span> <span class="n">validation_metrics_svm</span> <span class="o">=</span> <span class="n">train_smv_model</span><span class="p">(</span><span class="n">svm_model</span><span class="p">,</span> <span class="n">train_svm</span><span class="p">,</span> <span class="n">validation_svm</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">criterion_svm</span><span class="p">)</span>
+    <span class="c1"># Depending on the configuration you choose, create graphs for performance</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_model_graph</span><span class="p">:</span>
+        <span class="n">print_metrics_graph</span><span class="p">(</span><span class="n">first_training_metrics</span><span class="p">,</span> <span class="n">first_validation_metrics</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">metric_plotted_during_traininig</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">)</span>
+        <span class="n">print_metrics_graph</span><span class="p">(</span><span class="n">second_training_metrics</span><span class="p">,</span> <span class="n">second_validation_metrics</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">metric_plotted_during_traininig</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">)</span>
+        <span class="n">print_metrics_graph</span><span class="p">(</span><span class="n">train_metrics_svm</span><span class="p">,</span> <span class="n">validation_metrics_svm</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">metric_plotted_during_traininig</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">)</span>
+        
+    <span class="c1"># --------------------------------</span>
+    <span class="c1"># 6. Evaluate model on test set</span>
+    <span class="c1"># --------------------------------</span>
+    
+    <span class="c1"># Evaluate the performance of the ResNet model on the test_dataset</span>
+    <span class="n">first_metrics</span><span class="p">,</span> <span class="n">first_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate_model</span><span class="p">(</span><span class="n">first_best_val_metric</span><span class="p">,</span> <span class="n">first_best_model</span><span class="p">,</span> <span class="n">test_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Prints the confusion matrix of the ResNet model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">first_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    
+    <span class="c1"># Evaluate the performance of the AlexNet model on the test_dataset</span>
+    <span class="n">second_metrics</span><span class="p">,</span> <span class="n">second_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate_model</span><span class="p">(</span><span class="n">second_best_val_metric</span><span class="p">,</span> <span class="n">second_best_model</span><span class="p">,</span> <span class="n">test_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Prints the confusion matrix of the AlexNet model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">second_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Evaluate the performance of the SVM model on the test_dataset</span>
+    <span class="n">svm_metrics</span><span class="p">,</span> <span class="n">svm_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate_model</span><span class="p">(</span><span class="n">best_val_metric_svm</span><span class="p">,</span> <span class="n">best_model_svm</span><span class="p">,</span> <span class="n">test_svm</span><span class="p">,</span> <span class="n">criterion_svm</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Prints the confusion matrix of SVM model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">svm_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="c1"># Depending on the configuration you choose, create graphs for confusion matrix</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_model_graph</span><span class="p">:</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">first_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">second_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">svm_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 7. Compare performance</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Compare the performance of the two deep learning models and SVM model</span>
+    <span class="n">compare_performance</span><span class="p">(</span><span class="n">first_metrics</span><span class="p">,</span> <span class="n">second_metrics</span><span class="p">,</span> <span class="n">svm_metrics</span><span class="p">)</span>
+    <span class="c1"># Depending on the configuration you choose, create graphs for compare graph</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_compare_graph</span><span class="p">:</span>
+        <span class="n">print_compare_graph</span><span class="p">(</span><span class="n">first_metrics</span><span class="p">,</span> <span class="n">second_metrics</span><span class="p">,</span> <span class="n">svm_metrics</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_compare_graph</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 8. Save model</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Verify that the checkpoint folder passed by the configuration parameter exists</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Store model weights in the checkpoin folder</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">first_best_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/ResNet_best_model.pt&quot;</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">second_best_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/AlexNet_best_model.pt&quot;</span><span class="p">)</span>
+    <span class="n">dump</span><span class="p">(</span><span class="n">svm_model</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/SVM_best_model.pkl&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Models saved.&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Train finish correctly.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

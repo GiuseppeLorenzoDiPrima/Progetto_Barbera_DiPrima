@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>test &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Progetto Barbera DiPrima
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Progetto Barbera DiPrima</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">test</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for test</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Third-party imports</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">load</span>
+
+<span class="c1"># Local application/library specific imports</span>
+<span class="kn">from</span> <span class="nn">data_classes.manage_dataset</span> <span class="kn">import</span> <span class="n">ChestXrayDataset</span>
+<span class="kn">from</span> <span class="nn">model_classes.resnet_model</span> <span class="kn">import</span> <span class="n">ResNet</span><span class="p">,</span> <span class="n">ResidualBlock</span>
+<span class="kn">from</span> <span class="nn">model_classes.alexnet_model</span> <span class="kn">import</span> <span class="n">AlexNet</span>
+<span class="kn">from</span> <span class="nn">model_classes.svm_model</span> <span class="kn">import</span> <span class="n">SVM</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">extract_representations.vision_embeddings</span> <span class="kn">import</span> <span class="n">VisionEmbeddings</span>
+
+<span class="c1"># Configuration and utility imports</span>
+<span class="kn">from</span> <span class="nn">yaml_config_override</span> <span class="kn">import</span> <span class="n">add_arguments</span>
+<span class="kn">from</span> <span class="nn">addict</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="c1"># Print test set performance metrics</span>
+<div class="viewcode-block" id="print_metrics">
+<a class="viewcode-back" href="../test.html#test.print_metrics">[docs]</a>
+<span class="k">def</span> <span class="nf">print_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the metrics.</span>
+
+<span class="sd">    :param metrics: The metrics to print.</span>
+<span class="sd">    :type metrics: Dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Scrolls through the dictionary and prints performance metrics</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1"># Extracts metric values from the dictionary</span>
+<div class="viewcode-block" id="extract_value">
+<a class="viewcode-back" href="../test.html#test.extract_value">[docs]</a>
+<span class="k">def</span> <span class="nf">extract_value</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the values from the metrics.</span>
+
+<span class="sd">    :param metrics: The metrics to extract values from.</span>
+<span class="sd">    :type metrics: dict</span>
+<span class="sd">    :return: Returns a list of the extracted values.</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize an array</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Iterates through dictionary values and adds them to the list</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="c1"># Return the list</span>
+    <span class="k">return</span> <span class="n">values</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main script for training and evaluating the models.</span>
+
+<span class="sd">    The script performs the following steps:</span>
+<span class="sd">    1. Load the configuration.</span>
+<span class="sd">    2. Set the device for training.</span>
+<span class="sd">    3. Load the data.</span>
+<span class="sd">    4. Load the models.</span>
+<span class="sd">    5. Load the model weights.</span>
+<span class="sd">    6. Set the criterion for training.</span>
+<span class="sd">    7. Evaluate the models.</span>
+<span class="sd">    8. Print the performance of the models.</span>
+<span class="sd">    9. Compare the performance of the models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 1. Load configuration</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Configuration parameters</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span><span class="n">add_arguments</span><span class="p">())</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 2. Set device</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Selecting the device to run with: CUDA -&gt; GPU; CPU -&gt; CPU</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Device: &quot;</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">get_device_name</span><span class="p">())</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 3. Load data</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Create the test_dataset item</span>
+    <span class="n">test_dataset</span>  <span class="o">=</span> <span class="n">ChestXrayDataset</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># Loading the test_dataset</span>
+    <span class="n">test_dl</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">test_dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># Without shuffling the data</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Vision embeddings for SVM:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Load the pca object determined during the training phase</span>
+    <span class="n">pca</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/pca.joblib&quot;</span><span class="p">)</span>
+    <span class="c1"># Create vision_embedding object</span>
+    <span class="n">vision_embeddings</span> <span class="o">=</span> <span class="n">VisionEmbeddings</span><span class="p">()</span>
+    <span class="c1"># Create the dataset containing features for the svm model</span>
+    <span class="n">test_dataset_svm</span> <span class="o">=</span> <span class="n">vision_embeddings</span><span class="o">.</span><span class="n">extract_single_dataset</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">pca</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_model_graph</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 4. Load model</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Load the templates and specify their configuration through the config variable</span>
+    <span class="c1"># ResNet Model</span>
+    <span class="n">first_model</span> <span class="o">=</span> <span class="n">ResNet</span><span class="p">(</span>
+        <span class="n">ResidualBlock</span><span class="p">,</span>
+        <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">channels_of_color</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">planes</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">ResNet_model</span><span class="o">.</span><span class="n">in_features</span>
+    <span class="p">)</span>
+    <span class="n">first_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="c1"># AlexNet Model</span>
+    <span class="n">second_model</span> <span class="o">=</span> <span class="n">AlexNet</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">channels_of_color</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">AlexNet_model</span><span class="o">.</span><span class="n">inplace</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">second_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="c1"># SVM model</span>
+    <span class="n">svm_model</span> <span class="o">=</span> <span class="n">SVM</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">test_dataset_svm</span><span class="o">.</span><span class="n">num_of_features</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 5. Load model weights</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Loads the saved model weights to the specified folder during training</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading models...&quot;</span><span class="p">)</span>
+    <span class="c1"># First model</span>
+    <span class="n">first_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/ResNet_best_model.pt&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&gt; ResNet model loaded.&quot;</span><span class="p">)</span>
+    <span class="c1"># Second model</span>
+    <span class="n">second_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/AlexNet_best_model.pt&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&gt; AlexNet model loaded.&quot;</span><span class="p">)</span>
+    <span class="c1"># SVM model</span>
+    <span class="n">svm_model</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">checkpoint_dir</span><span class="si">}</span><span class="s2">/SVM_best_model.pkl&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&gt; SVM model loaded.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 6. Criterion</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="c1"># Defines the CrossEntropyLoss and hingeLoss as loss functions for deep and machine learning models, respectively</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+    <span class="n">criterion_svm</span> <span class="o">=</span> <span class="n">svm_model</span><span class="o">.</span><span class="n">hinge_loss</span>
+    
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 7. Evaluate</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Evaluating models...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Evaluate ResNet model performance</span>
+    <span class="n">first_metrics</span><span class="p">,</span> <span class="n">first_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">first_model</span><span class="p">,</span> <span class="n">test_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+    <span class="c1"># Prints the confusion matrix of the ResNet model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">first_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Evaluate AlexNet model performance</span>
+    <span class="n">second_metrics</span><span class="p">,</span> <span class="n">second_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">second_model</span><span class="p">,</span> <span class="n">test_dl</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+    <span class="c1"># Prints the confusion matrix of the AlexNet model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">second_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Evaluate SVM model performance</span>
+    <span class="n">svm_metrics</span><span class="p">,</span> <span class="n">svm_conf_matrix</span> <span class="o">=</span> <span class="n">evaluate_svm</span><span class="p">(</span><span class="n">svm_model</span><span class="p">,</span> <span class="n">test_dataset_svm</span><span class="p">,</span> <span class="n">criterion_svm</span><span class="p">)</span>
+    <span class="c1"># Prints the confusion matrix of SVM model</span>
+    <span class="n">print_confusion_matrix</span><span class="p">(</span><span class="n">svm_conf_matrix</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="c1"># Print confusion matrices graphs</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_model_graph</span><span class="p">:</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">first_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">second_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;AlexNet&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">print_confusion_matrix_graph</span><span class="p">(</span><span class="n">svm_conf_matrix</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_model_graph</span><span class="p">,</span> <span class="n">type_model</span><span class="o">=</span><span class="s1">&#39;SVM&#39;</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 8. Print performance</span>
+    <span class="c1"># ---------------------</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Performance:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ResNet model performance:&quot;</span><span class="p">)</span>
+    <span class="c1"># Print the performance of ResNet model</span>
+    <span class="n">print_metrics</span><span class="p">(</span><span class="n">first_metrics</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AlexNet model performance:&quot;</span><span class="p">)</span>
+    <span class="c1"># Print the performance of AlexNet model</span>
+    <span class="n">print_metrics</span><span class="p">(</span><span class="n">second_metrics</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SVM model performance:&quot;</span><span class="p">)</span>
+    <span class="c1"># Print the performance of SVM model</span>
+    <span class="n">print_metrics</span><span class="p">(</span><span class="n">svm_metrics</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+         
+    <span class="c1"># ---------------------</span>
+    <span class="c1"># 9. Compare performance</span>
+    <span class="c1"># ---------------------</span>
+        
+    <span class="c1"># Initialize an array</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Inserts dictionaries containing performance into the array</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extract_value</span><span class="p">(</span><span class="n">first_metrics</span><span class="p">))</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extract_value</span><span class="p">(</span><span class="n">second_metrics</span><span class="p">))</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extract_value</span><span class="p">(</span><span class="n">svm_metrics</span><span class="p">))</span>
+    <span class="c1"># Compare performance</span>
+    <span class="n">compare_performance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
+    <span class="c1"># Print performance comparison results</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_compare_graph</span><span class="p">:</span>
+        <span class="n">print_compare_graph</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_compare_graph</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Test finish correctly.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
