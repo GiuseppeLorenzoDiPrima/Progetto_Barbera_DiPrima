@@ -4,12 +4,10 @@ yaml_config_override
 addict
 tqdm
 scikit-learn
-sklearn
 numpy
 matplotlib
 pandas
-shutil
 seaborn
 transformers
-logging
 joblib
+imblearn
