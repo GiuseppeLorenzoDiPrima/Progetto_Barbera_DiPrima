@@ -2,6 +2,7 @@ data:
   data_dir: dataset//chest_xray// # Folder containing the dataset
   strength_of_oversampling: 1 # Used for oversampling in the case of deep learning models
   principal_component: 8 # Number of features after PCA
+  split_percentage: 0.9 # Percentage of train in dataset resize split
 
 training:
   epochs: 20 # The SVM model receives twice as many epochs as deep learning models (epochs you set)
@@ -17,12 +18,14 @@ training:
   earling_stopping_max_no_valid_epochs: 3
 
 ResNet_model:
+  layers: [3, 4, 6, 3]
   stride: [2, 1]
   padding: [3, 1]
   kernel: [7, 3]
   channels_of_color: 3 # RGB
   planes: [64, 128, 256, 512]
   in_features: 512
+  inplanes: 64
 
 AlexNet_model:
   stride: [4, 2]

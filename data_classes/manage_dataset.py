@@ -171,9 +171,9 @@ class LabelPreservingSubset(torch.utils.data.Subset):
 
 
 # Redistribute train set and validation set data
-def resize_datasets(train_dataset, val_dataset):
+def resize_datasets(train_dataset, val_dataset, split_percentage):
     """
-    Resizes the datasets to have a 90% and 10% split.
+    Resizes the datasets to have a split_percentage% and (100 - split_percentage)% split for training and validation.
 
     :param train_dataset: The training dataset.
     :type train_dataset: Dataset
@@ -190,7 +190,7 @@ def resize_datasets(train_dataset, val_dataset):
     # Combine datasets
     combined_dataset = LabelPreservingConcatDataset(all_datasets)
     # It distributes 90% to the train set and 10% to the validation set
-    train_size = int(0.9 * len(combined_dataset))
+    train_size = int(split_percentage * len(combined_dataset))
     val_size = len(combined_dataset) - train_size
     train_dataset, val_dataset = torch.utils.data.random_split(combined_dataset, [train_size, val_size])
     train_dataset = LabelPreservingSubset(combined_dataset, train_dataset.indices)
@@ -281,13 +281,13 @@ def create_directory_binary(path):
         os.makedirs(os.path.join(path, 'PNEUMONIA'))
         
 # Splits files for binary classification
-def split_binary_directory():
+def split_binary_directory(data_path):
     """
     Splits the directory into a binary structure by moving 'BACTERIA' and 'VIRUS' files into a 'PNEUMONIA' directory.
     """
     # Initialize file_list and an array with paths
     file_list = []    
-    path = ['dataset//chest_xray//train//', 'dataset//chest_xray//val//', 'dataset//chest_xray//test//']
+    path = [data_path + 'train//', data_path + 'val//', data_path + 'test//']
     # Check if the train PNEUMONIA folder exists, otherwise create it
     create_directory_binary(path[0])
     # Adds files found in the train BACTERIA and VIRUS folders to the list
@@ -362,13 +362,13 @@ def create_directory_ternary(path):
         os.makedirs(os.path.join(path, 'VIRUS'))
 
 # Splits files for ternary classification
-def split_ternary_directory():
+def split_ternary_directory(data_path):
     """
     Splits the directory into a ternary structure by moving files from the 'PNEUMONIA' directory to 'BACTERIA' and 'VIRUS' directories.
     """
     # Initialize file_list and an array with paths
     file_list = []    
-    path = ['dataset//chest_xray//train//', 'dataset//chest_xray//val//', 'dataset//chest_xray//test//']
+    path = [data_path + 'train//', data_path + 'val//', data_path + 'test//']
     # Check if the train BACTERIA and VIRUS folder exist, otherwise create them
     create_directory_ternary(path[0])
     # Adds files found in the train PNEUMONIA folder to the list
@@ -486,7 +486,7 @@ def load_datasets(config):
         print_dataset_graph(train_dataset, val_dataset, test_dataset, config.graph.view_dataset_graph, resize=False)
     print("---------------------")
     # Redistribute datasets
-    train_dataset, val_dataset = resize_datasets(train_dataset, val_dataset)
+    train_dataset, val_dataset = resize_datasets(train_dataset, val_dataset, config.data.split_percentage)
     # Print statistics after
     print_shapes('after', train_dataset, val_dataset, test_dataset, config.classification.type)
     # If the user expressed the preference in the base_config file, it create the graph
@@ -519,13 +519,13 @@ def binary_load(config):
     :rtype: tuple (Dataset, Dataset, Dataset)
     """
     # Verify that the folders of the binary split exist
-    pneu_train = verify_division('dataset//chest_xray//train//PNEUMONIA')
-    pneu_val = verify_division('dataset//chest_xray//val//PNEUMONIA')
-    pneu_test = verify_division('dataset//chest_xray//test//PNEUMONIA')
+    pneu_train = verify_division(config.data.datadir + 'train//PNEUMONIA')
+    pneu_val = verify_division(config.data.datadir + 'val//PNEUMONIA')
+    pneu_test = verify_division(config.data.datadir + 'test//PNEUMONIA')
     # If the division is not correct, it proceeds with a suitable split
     if not (pneu_train and pneu_val and pneu_test):
         print("Transform dataset to binary...")
-        split_binary_directory()
+        split_binary_directory(config.data.datadir)
     # Determine new datasets
     train_dataset, val_dataset, test_dataset = load_datasets(config)
     # Return datasets
@@ -542,16 +542,16 @@ def ternary_load(config):
     :rtype: tuple (Dataset, Dataset, Dataset)
     """
     # Verify that the folders of the ternary split exist
-    bact_train = verify_division('dataset//chest_xray//train//BACTERIA')
-    vir_train = verify_division('dataset//chest_xray//train//VIRUS')
-    bact_val = verify_division('dataset//chest_xray//val//BACTERIA')
-    vir_val = verify_division('dataset//chest_xray//val//VIRUS')
-    bact_test = verify_division('dataset//chest_xray//test//BACTERIA')
-    vir_test = verify_division('dataset//chest_xray//test//VIRUS')
+    bact_train = verify_division(config.data.datadir + 'train//BACTERIA')
+    vir_train = verify_division(config.data.datadir + 'train//VIRUS')
+    bact_val = verify_division(config.data.datadir + 'val//BACTERIA')
+    vir_val = verify_division(config.data.datadir + 'val//VIRUS')
+    bact_test = verify_division(config.data.datadir + 'test//BACTERIA')
+    vir_test = verify_division(config.data.datadir + 'test//VIRUS')
     # If the division is not correct, it proceeds with a suitable split
     if not (bact_train and vir_train and bact_val and vir_val and bact_test and vir_test):
         print("Transform dataset to ternary...")
-        split_ternary_directory()
+        split_ternary_directory(config.data.datadir)
     # Determine new datasets
     train_dataset, val_dataset, test_dataset = load_datasets(config)
     # Return datasets

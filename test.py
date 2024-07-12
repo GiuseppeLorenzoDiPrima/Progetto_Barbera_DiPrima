@@ -111,14 +111,15 @@ if __name__ == '__main__':
     # ResNet Model
     first_model = ResNet(
         ResidualBlock,
-        [3,4,6,3],
+        config.ResNet_model.layers,
         config.classification.type,
         config.ResNet_model.stride,
         config.ResNet_model.padding,
         config.ResNet_model.kernel,
         config.ResNet_model.channels_of_color,
         config.ResNet_model.planes,
-        config.ResNet_model.in_features
+        config.ResNet_model.in_features,
+        config.ResNet_model.inplanes
     )
     first_model.to(device)
     # AlexNet Model

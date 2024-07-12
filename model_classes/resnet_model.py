@@ -54,7 +54,7 @@ class ResidualBlock(nn.Module):
 
 # Class to define the ResNet by inheriting nn.Module
 class ResNet(nn.Module):
-    def __init__(self, block, layers, type_net, stride_size, padding_size, kernel_size, channels_of_color, planes, in_features):
+    def __init__(self, block, layers, type_net, stride_size, padding_size, kernel_size, channels_of_color, planes, in_features, inplanes):
         """
         A PyTorch implementation of the ResNet model.
 
@@ -88,10 +88,10 @@ class ResNet(nn.Module):
         # ReLU -> Activation function
         # MaxPool2d -> Max pooling layer
         # AvgPool2d -> Average pooling layer
-        self.inplanes = 64
+        self.inplanes = inplanes
         self.conv1 = nn.Sequential(
-                        nn.Conv2d(channels_of_color, 64, kernel_size = kernel_size[0], stride = stride_size[0], padding = padding_size[0]),
-                        nn.BatchNorm2d(64),
+                        nn.Conv2d(channels_of_color, self.inplanes, kernel_size = kernel_size[0], stride = stride_size[0], padding = padding_size[0]),
+                        nn.BatchNorm2d(self.inplanes),
                         nn.ReLU())
         self.maxpool = nn.MaxPool2d(kernel_size = kernel_size[1], stride = stride_size[0], padding = padding_size[1])
         self.layer0 = self._make_layer(block, planes[0], layers[0], stride_size[1])
