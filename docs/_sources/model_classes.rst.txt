@@ -20,14 +20,6 @@ model\_classes.resnet\_model module
    :undoc-members:
    :show-inheritance:
 
-model\_classes.svm\_model module
---------------------------------
-
-.. automodule:: model_classes.svm_model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>data_classes.manage_dataset &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+  <title>data_classes.manage_dataset &mdash; Chest_XRay 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -31,7 +31,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            Progetto Barbera DiPrima
+            Chest_XRay
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +41,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Progetto esame</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Progetto Barbera DiPrima</a>
+          <a href="../../index.html">Chest_XRay</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -116,15 +119,18 @@
 <span class="k">class</span> <span class="nc">ChestXrayDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A Dataset for chest X-ray images.</span>
-
-<span class="sd">    :param type: The type of the dataset (e.g., &#39;train&#39;, &#39;val&#39;, &#39;test&#39;).</span>
-<span class="sd">    :type type: str</span>
-<span class="sd">    :param root: The root directory of the dataset.</span>
-<span class="sd">    :type root: str</span>
-<span class="sd">    :param classes: The classes in the dataset.</span>
-<span class="sd">    :type classes: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A Dataset for chest X-ray images.</span>
+
+<span class="sd">        :param type: The type of the dataset (e.g., &#39;train&#39;, &#39;val&#39;, &#39;test&#39;).</span>
+<span class="sd">        :type type: str</span>
+<span class="sd">        :param root: The root directory of the dataset.</span>
+<span class="sd">        :type root: str</span>
+<span class="sd">        :param classes: The classes in the dataset.</span>
+<span class="sd">        :type classes: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Initializing the variable</span>
         <span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">path_removed</span> <span class="o">=</span> <span class="p">[]</span>
@@ -214,11 +220,14 @@
 <span class="k">class</span> <span class="nc">LabelPreservingConcatDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ConcatDataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A ConcatDataset that preserves the labels of the original datasets.</span>
-
-<span class="sd">    :param datasets: The datasets to concatenate.</span>
-<span class="sd">    :type datasets: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasets</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A ConcatDataset that preserves the labels of the original datasets.</span>
+
+<span class="sd">        :param datasets: The datasets to concatenate.</span>
+<span class="sd">        :type datasets: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
         <span class="c1"># Initializing arrays and string</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
@@ -238,13 +247,16 @@
 <span class="k">class</span> <span class="nc">LabelPreservingSubset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Subset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A Subset that preserves the labels of the original dataset.</span>
-
-<span class="sd">    :param dataset: The original dataset.</span>
-<span class="sd">    :type dataset: Dataset</span>
-<span class="sd">    :param indices: The indices of the subset.</span>
-<span class="sd">    :type indices: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A Subset that preserves the labels of the original dataset.</span>
+
+<span class="sd">        :param dataset: The original dataset.</span>
+<span class="sd">        :type dataset: Dataset</span>
+<span class="sd">        :param indices: The indices of the subset.</span>
+<span class="sd">        :type indices: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">classes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
@@ -255,14 +267,16 @@
 <span class="c1"># Redistribute train set and validation set data</span>
 <div class="viewcode-block" id="resize_datasets">
 <a class="viewcode-back" href="../../data_classes.html#data_classes.manage_dataset.resize_datasets">[docs]</a>
-<span class="k">def</span> <span class="nf">resize_datasets</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">resize_datasets</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">split_percentage</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Resizes the datasets to have a 90% and 10% split.</span>
+<span class="sd">    Resizes the datasets to have a split_percentage% and (100 - split_percentage)% split for training and validation.</span>
 
 <span class="sd">    :param train_dataset: The training dataset.</span>
 <span class="sd">    :type train_dataset: Dataset</span>
 <span class="sd">    :param val_dataset: The validation dataset.</span>
 <span class="sd">    :type val_dataset: Dataset</span>
+<span class="sd">    :param split_percentage: The percentage of the combined dataset to be used for training.</span>
+<span class="sd">    :type split_percentage: float</span>
 <span class="sd">    :return: Returns the resized train and validation datasets.</span>
 <span class="sd">    :rtype: tuple (Dataset, Dataset)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -274,7 +288,7 @@
     <span class="c1"># Combine datasets</span>
     <span class="n">combined_dataset</span> <span class="o">=</span> <span class="n">LabelPreservingConcatDataset</span><span class="p">(</span><span class="n">all_datasets</span><span class="p">)</span>
     <span class="c1"># It distributes 90% to the train set and 10% to the validation set</span>
-    <span class="n">train_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_dataset</span><span class="p">))</span>
+    <span class="n">train_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split_percentage</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_dataset</span><span class="p">))</span>
     <span class="n">val_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_dataset</span><span class="p">)</span> <span class="o">-</span> <span class="n">train_size</span>
     <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">random_split</span><span class="p">(</span><span class="n">combined_dataset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">])</span>
     <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">LabelPreservingSubset</span><span class="p">(</span><span class="n">combined_dataset</span><span class="p">,</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
@@ -377,13 +391,16 @@
 <span class="c1"># Splits files for binary classification</span>
 <div class="viewcode-block" id="split_binary_directory">
 <a class="viewcode-back" href="../../data_classes.html#data_classes.manage_dataset.split_binary_directory">[docs]</a>
-<span class="k">def</span> <span class="nf">split_binary_directory</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">split_binary_directory</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Splits the directory into a binary structure by moving &#39;BACTERIA&#39; and &#39;VIRUS&#39; files into a &#39;PNEUMONIA&#39; directory.</span>
+
+<span class="sd">    :param data_path: The path to the dataset directory.</span>
+<span class="sd">    :type data_path: str</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Initialize file_list and an array with paths</span>
     <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>    
-    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset//chest_xray//train//&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset//chest_xray//val//&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset//chest_xray//test//&#39;</span><span class="p">]</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;train//&#39;</span><span class="p">,</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;val//&#39;</span><span class="p">,</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;test//&#39;</span><span class="p">]</span>
     <span class="c1"># Check if the train PNEUMONIA folder exists, otherwise create it</span>
     <span class="n">create_directory_binary</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="c1"># Adds files found in the train BACTERIA and VIRUS folders to the list</span>
@@ -467,13 +484,16 @@
 <span class="c1"># Splits files for ternary classification</span>
 <div class="viewcode-block" id="split_ternary_directory">
 <a class="viewcode-back" href="../../data_classes.html#data_classes.manage_dataset.split_ternary_directory">[docs]</a>
-<span class="k">def</span> <span class="nf">split_ternary_directory</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">split_ternary_directory</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Splits the directory into a ternary structure by moving files from the &#39;PNEUMONIA&#39; directory to &#39;BACTERIA&#39; and &#39;VIRUS&#39; directories.</span>
+
+<span class="sd">    :param data_path: The path to the dataset directory.</span>
+<span class="sd">    :type data_path: str</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Initialize file_list and an array with paths</span>
     <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>    
-    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset//chest_xray//train//&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset//chest_xray//val//&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset//chest_xray//test//&#39;</span><span class="p">]</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;train//&#39;</span><span class="p">,</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;val//&#39;</span><span class="p">,</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s1">&#39;test//&#39;</span><span class="p">]</span>
     <span class="c1"># Check if the train BACTERIA and VIRUS folder exist, otherwise create them</span>
     <span class="n">create_directory_ternary</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="c1"># Adds files found in the train PNEUMONIA folder to the list</span>
@@ -600,13 +620,12 @@
         <span class="n">print_dataset_graph</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_dataset_graph</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
     <span class="c1"># Redistribute datasets</span>
-    <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">resize_datasets</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">)</span>
+    <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">resize_datasets</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">split_percentage</span><span class="p">)</span>
     <span class="c1"># Print statistics after</span>
     <span class="n">print_shapes</span><span class="p">(</span><span class="s1">&#39;after&#39;</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
     <span class="c1"># If the user expressed the preference in the base_config file, it create the graph</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">create_dataset_graph</span><span class="p">:</span>
         <span class="n">print_dataset_graph</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">view_dataset_graph</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------&quot;</span><span class="p">)</span>
     <span class="c1"># Return datasets</span>
     <span class="k">return</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span></div>
 
@@ -639,13 +658,13 @@
 <span class="sd">    :rtype: tuple (Dataset, Dataset, Dataset)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Verify that the folders of the binary split exist</span>
-    <span class="n">pneu_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//train//PNEUMONIA&#39;</span><span class="p">)</span>
-    <span class="n">pneu_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//val//PNEUMONIA&#39;</span><span class="p">)</span>
-    <span class="n">pneu_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//test//PNEUMONIA&#39;</span><span class="p">)</span>
+    <span class="n">pneu_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;train//PNEUMONIA&#39;</span><span class="p">)</span>
+    <span class="n">pneu_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;val//PNEUMONIA&#39;</span><span class="p">)</span>
+    <span class="n">pneu_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;test//PNEUMONIA&#39;</span><span class="p">)</span>
     <span class="c1"># If the division is not correct, it proceeds with a suitable split</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">pneu_train</span> <span class="ow">and</span> <span class="n">pneu_val</span> <span class="ow">and</span> <span class="n">pneu_test</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transform dataset to binary...&quot;</span><span class="p">)</span>
-        <span class="n">split_binary_directory</span><span class="p">()</span>
+        <span class="n">split_binary_directory</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span>
     <span class="c1"># Determine new datasets</span>
     <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">load_datasets</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="c1"># Return datasets</span>
@@ -665,16 +684,16 @@
 <span class="sd">    :rtype: tuple (Dataset, Dataset, Dataset)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Verify that the folders of the ternary split exist</span>
-    <span class="n">bact_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//train//BACTERIA&#39;</span><span class="p">)</span>
-    <span class="n">vir_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//train//VIRUS&#39;</span><span class="p">)</span>
-    <span class="n">bact_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//val//BACTERIA&#39;</span><span class="p">)</span>
-    <span class="n">vir_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//val//VIRUS&#39;</span><span class="p">)</span>
-    <span class="n">bact_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//test//BACTERIA&#39;</span><span class="p">)</span>
-    <span class="n">vir_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="s1">&#39;dataset//chest_xray//test//VIRUS&#39;</span><span class="p">)</span>
+    <span class="n">bact_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;train//BACTERIA&#39;</span><span class="p">)</span>
+    <span class="n">vir_train</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;train//VIRUS&#39;</span><span class="p">)</span>
+    <span class="n">bact_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;val//BACTERIA&#39;</span><span class="p">)</span>
+    <span class="n">vir_val</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;val//VIRUS&#39;</span><span class="p">)</span>
+    <span class="n">bact_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;test//BACTERIA&#39;</span><span class="p">)</span>
+    <span class="n">vir_test</span> <span class="o">=</span> <span class="n">verify_division</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+</span> <span class="s1">&#39;test//VIRUS&#39;</span><span class="p">)</span>
     <span class="c1"># If the division is not correct, it proceeds with a suitable split</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">bact_train</span> <span class="ow">and</span> <span class="n">vir_train</span> <span class="ow">and</span> <span class="n">bact_val</span> <span class="ow">and</span> <span class="n">vir_val</span> <span class="ow">and</span> <span class="n">bact_test</span> <span class="ow">and</span> <span class="n">vir_test</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transform dataset to ternary...&quot;</span><span class="p">)</span>
-        <span class="n">split_ternary_directory</span><span class="p">()</span>
+        <span class="n">split_ternary_directory</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span>
     <span class="c1"># Determine new datasets</span>
     <span class="n">train_dataset</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">load_datasets</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="c1"># Return datasets</span>
@@ -689,7 +708,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+    <p>&#169; Copyright 2024, Barbera and Di Prima.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -8,92 +8,52 @@ from joblib import load
 from data_classes.manage_dataset import ChestXrayDataset
 from model_classes.resnet_model import ResNet, ResidualBlock
 from model_classes.alexnet_model import AlexNet
-from model_classes.svm_model import SVM
 from utils import *
 from extract_representations.vision_embeddings import VisionEmbeddings
+from sklearn import svm
+from sklearn.metrics import hinge_loss, log_loss
 
 # Configuration and utility imports
 from yaml_config_override import add_arguments
 from addict import Dict
 
 # Print test set performance metrics
-def print_metrics(metrics):
+def print_metrics(list_of_metrics, saved_models):
     """
     Prints the metrics.
 
-    :param metrics: The metrics to print.
-    :type metrics: Dictionary
+    :param list_of_metrics: The list of metrics to print.
+    :type list_of_metrics: list of dict
+    :param saved_models: The list of saved model names.
+    :type saved_models: list of str
     """
-    # Scrolls through the dictionary and prints performance metrics
-    for key, value in metrics.items():
-        print(f"Test {key}: {value:.4f}")
+    for idx, metrics in enumerate(list_of_metrics):
+        print("\n" + saved_models[idx] + " model performance:\n")
+        # Scrolls through the dictionary and prints performance metrics
+        for key, value in metrics.items():
+            print(f"Test {key}: {value:.4f}")
 
-# Extracts metric values from the dictionary
-def extract_value(metrics):
+# Test the machine learning model
+def test_ml_model(model_name, config, device, test_dataset):
     """
-    Extracts the values from the metrics.
+    This function tests a machine learning model on a test dataset.
 
-    :param metrics: The metrics to extract values from.
-    :type metrics: dict
-    :return: Returns a list of the extracted values.
-    :rtype: list
-    """
-    # Initialize an array
-    values = []
-    # Iterates through dictionary values and adds them to the list
-    for key, value in metrics.items():
-        values.append(value)
-    # Return the list
-    return values
-
-
-if __name__ == '__main__':
-    """
-    The main script for training and evaluating the models.
-
-    The script performs the following steps:
-    1. Load the configuration.
-    2. Set the device for training.
-    3. Load the data.
-    4. Load the models.
-    5. Load the model weights.
-    6. Set the criterion for training.
-    7. Evaluate the models.
-    8. Print the performance of the models.
-    9. Compare the performance of the models.
+    :param model_name: The name of the model to be tested (e.g., 'SVM').
+    :type model_name: str
+    :param config: The configuration settings for testing the model.
+    :type config: object
+    :param device: The device on which to test the model (e.g., 'cpu', 'cuda').
+    :type device: str
+    :param test_dataset: The dataset used for testing the model.
+    :type test_dataset: torch.utils.data.Dataset
+    :return: Returns the metrics for the test dataset.
+    :rtype: dict
     """
     
     # ---------------------
-    # 1. Load configuration
+    # 1. Compute dataset for svm
     # ---------------------
     
-    # Configuration parameters
-    config = Dict(add_arguments())
-    
-    # ---------------------
-    # 2. Set device
-    # ---------------------
-    
-    # Selecting the device to run with: CUDA -> GPU; CPU -> CPU
-    if config.training.device.lower() == 'cuda' and torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    print("\nDevice: " + torch.cuda.get_device_name()) 
-    print("---------------------")
-
-    # ---------------------
-    # 3. Load data
-    # ---------------------
-    
-    # Create the test_dataset item
-    test_dataset  = ChestXrayDataset(type='test', root=config.data)
-    # Loading the test_dataset
-    test_dl = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=config.training.batch_size,
-        shuffle=False # Without shuffling the data
-    )
     print("Vision embeddings for SVM:\n")
     # Load the pca object determined during the training phase
     pca = load(f"{config.training.checkpoint_dir}/pca.joblib")
@@ -104,121 +64,246 @@ if __name__ == '__main__':
     print("---------------------")
     
     # ---------------------
-    # 4. Load model
+    # 2. Load model
     # ---------------------
     
     # Load the templates and specify their configuration through the config variable
-    # ResNet Model
-    first_model = ResNet(
-        ResidualBlock,
-        config.ResNet_model.layers,
-        config.classification.type,
-        config.ResNet_model.stride,
-        config.ResNet_model.padding,
-        config.ResNet_model.kernel,
-        config.ResNet_model.channels_of_color,
-        config.ResNet_model.planes,
-        config.ResNet_model.in_features,
-        config.ResNet_model.inplanes
-    )
-    first_model.to(device)
-    # AlexNet Model
-    second_model = AlexNet(
-        config.classification.type,
-        config.AlexNet_model.stride,
-        config.AlexNet_model.padding,
-        config.AlexNet_model.kernel,
-        config.AlexNet_model.channels_of_color,
-        config.AlexNet_model.inplace,
-    )
-    second_model.to(device)
     # SVM model
-    svm_model = SVM(config.training.epochs, config.training.learning_rate, test_dataset_svm.num_of_features)
-
+    svm_model = svm.SVC(
+        gamma=config.svm_training.gamma,
+        kernel=config.svm_training.kernel,
+        C=config.svm_training.C,
+        probability=config.svm_training.probability
+    )
+    
     # ---------------------
-    # 5. Load model weights
+    # 3. Load model weights
     # ---------------------
     
     # Loads the saved model weights to the specified folder during training
-    print("Loading models...")
-    # First model
-    first_model.load_state_dict(torch.load(f"{config.training.checkpoint_dir}/ResNet_best_model.pt"))
-    print("-> ResNet model loaded.")
-    # Second model
-    second_model.load_state_dict(torch.load(f"{config.training.checkpoint_dir}/AlexNet_best_model.pt"))
-    print("-> AlexNet model loaded.")
+    print("Loading " + model_name + " model...")
     # SVM model
-    svm_model = load(f"{config.training.checkpoint_dir}/SVM_best_model.pkl")
-    print("-> SVM model loaded.")
+    svm_model = load(f"{config.training.checkpoint_dir}/{model_name}_best_model.pkl")
+    print("-> " + model_name + " model loaded.")
     print("---------------------")
+    
+    # ---------------------
+    # 4. Evaluate
+    # ---------------------
+    
+    print("Evaluating model..\n")
+    # Evaluate the performance of the SVM model on the test_dataset
+    svm_metrics = compute_metrics(test_dataset_svm.labels, svm_model.predict(test_dataset_svm.features))
+    # If it is a binary classification, use hinge_loss as the loss function; otherwise, use log_loss
+    if config.classification.type.lower() == 'binary':
+        # Compute the loss using hinge_loss
+        svm_metrics['loss'] = hinge_loss(test_dataset_svm.labels, svm_model.predict(test_dataset_svm.features))
+    else:
+        # Compute the loss using log_loss
+        svm_metrics['loss'] = log_loss(test_dataset_svm.labels, svm_model.predict_proba(test_dataset_svm.features))
+    # Compute the confusion matrix for test
+    svm_conf_matrix = confusion_matrix(test_dataset_svm.labels, svm_model.predict(test_dataset_svm.features))
+    # Prints the confusion matrix of SVM model
+    print_confusion_matrix(svm_conf_matrix, type_model=model_name)
+    print("---------------------")
+    # Depending on the configuration you choose, create graphs for confusion matrix
+    if config.graph.create_model_graph:
+        print_confusion_matrix_graph(svm_conf_matrix, config.graph.view_model_graph, type_model=model_name, test=True)
+        
+    return svm_metrics
+
+# Test the deep learning model
+def test_dl_model(model_name, config, device, test_dataset):
+    """
+    This function tests a deep learning model on a test dataset.
+
+    :param model_name: The name of the model to be tested (e.g., 'ResNet', 'AlexNet').
+    :type model_name: str
+    :param config: The configuration settings for testing the model.
+    :type config: object
+    :param device: The device on which to test the model (e.g., 'cpu', 'cuda').
+    :type device: str
+    :param test_dataset: The dataset used for testing the model.
+    :type test_dataset: torch.utils.data.Dataset
+    :return: Returns the metrics for the test dataset.
+    :rtype: dict
+    """
+    
+    # ---------------------
+    # 1. Load data
+    # ---------------------
+    
+    # Loading the test_dataset
+    test_dl = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=config.deep_learning_training.batch_size,
+        shuffle=False # Without shuffling the data
+    )
+    
+    # ---------------------
+    # 2. Load model
+    # ---------------------
+    
+    # Load the templates and specify their configuration through the config variable
+    if 'resnet' in model_name.lower():
+        # ResNet Model
+        model = ResNet(
+            ResidualBlock,
+            config.ResNet_model.layers,
+            config.classification.type,
+            config.ResNet_model.stride,
+            config.ResNet_model.padding,
+            config.ResNet_model.kernel,
+            config.ResNet_model.channels_of_color,
+            config.ResNet_model.planes,
+            config.ResNet_model.in_features,
+            config.ResNet_model.inplanes
+        )
+        model.to(device)
+    # AlexNet Model
+    else:
+        model = AlexNet(
+            config.classification.type,
+            config.AlexNet_model.stride,
+            config.AlexNet_model.padding,
+            config.AlexNet_model.kernel,
+            config.AlexNet_model.channels_of_color,
+            config.AlexNet_model.inplace,
+        )
+        model.to(device)
 
     # ---------------------
-    # 6. Criterion
+    # 3. Load model weights
     # ---------------------
     
-    # Defines the CrossEntropyLoss and hingeLoss as loss functions for deep and machine learning models, respectively
+    # Loads the saved model weights to the specified folder during training
+    print("Loading " + model_name + " model...")
+    model.load_state_dict(torch.load(f"{config.training.checkpoint_dir}/{model_name}_best_model.pt"))
+    print("-> " + model_name + " model loaded.")
+    print("---------------------")
+    
+    # ---------------------
+    # 4. Criterion
+    # ---------------------
+    
+    # Defines the CrossEntropyLoss as loss functions for deep learning model
     criterion = nn.CrossEntropyLoss()
-    criterion_svm = svm_model.hinge_loss
     
     # ---------------------
-    # 7. Evaluate
+    # 5. Evaluate
     # ---------------------
     
-    print("Evaluating models...\n")
-    # Evaluate ResNet model performance
-    first_metrics, first_conf_matrix = evaluate(first_model, test_dl, criterion, device)
-    # Prints the confusion matrix of the ResNet model
-    print_confusion_matrix(first_conf_matrix, type_model='ResNet')
-    print()
-    # Evaluate AlexNet model performance
-    second_metrics, second_conf_matrix = evaluate(second_model, test_dl, criterion, device)
-    # Prints the confusion matrix of the AlexNet model
-    print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
-    print()
-    # Evaluate SVM model performance
-    svm_metrics, svm_conf_matrix = evaluate_svm(svm_model, test_dataset_svm, criterion_svm)
-    # Prints the confusion matrix of SVM model
-    print_confusion_matrix(svm_conf_matrix, type_model='SVM')
+    print("Evaluating model...\n")
+    # Evaluate model performance
+    metrics, conf_matrix = evaluate(model, test_dl, criterion, device)
+    # Prints the confusion matrix of the model
+    print_confusion_matrix(conf_matrix, type_model=model_name)
     print("---------------------")
     # Print confusion matrices graphs
     if config.graph.create_model_graph:
-        print_confusion_matrix_graph(first_conf_matrix, config.graph.view_model_graph, type_model='ResNet', test=True)
-        print_confusion_matrix_graph(second_conf_matrix, config.graph.view_model_graph, type_model='AlexNet', test=True)
-        print_confusion_matrix_graph(svm_conf_matrix, config.graph.view_model_graph, type_model='SVM', test=True)
+        print_confusion_matrix_graph(conf_matrix, config.graph.view_model_graph, type_model=model_name, test=True)
+    
+    return metrics
 
+
+# Main
+if __name__ == '__main__':
+    """
+    The main script for testing the models.
+
+    The script performs the following steps:
+    
+    1. Load configuration
+    2. Set device
+    3. Load data
+    4. Get saved model
+    5. Test on saved models
+    6. Print performance    
+    7. Compare performance
+    """
+    
     # ---------------------
-    # 8. Print performance
+    # 1. Load configuration
     # ---------------------
     
-    print("Performance:\n")
-    print("ResNet model performance:")
-    # Print the performance of ResNet model
-    print_metrics(first_metrics)
-    print()
-    print("AlexNet model performance:")
-    # Print the performance of AlexNet model
-    print_metrics(second_metrics)
-    print()
-    print("SVM model performance:")
-    # Print the performance of SVM model
-    print_metrics(svm_metrics)
+    # Configuration parameters
+    config = Dict(add_arguments())
+    
+    # ---------------------
+    
+    # 2. Set device
+    # ---------------------
+    
+    # Selecting the device to run with: CUDA -> GPU; CPU -> CPU
+    if config.training.device.lower() == 'cuda' and torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+    # Print selected device
+    print("\nDevice: " + torch.cuda.get_device_name()) 
+    print("---------------------")
+
+    # ---------------------
+    # 3. Load data
+    # ---------------------
+    
+    # Create the test_dataset item
+    test_dataset  = ChestXrayDataset(type='test', root=config.data)
+    
+    # ---------------------
+    # 4. Get saved model
+    # ---------------------
+    
+    # Get the current path
+    path = os.getcwd()
+    if not os.path.exists(os.path.join(path, config.training.checkpoint_dir)):
+        os.makedirs(os.path.join(path, config.training.checkpoint_dir))
+    # Get path of saved models
+    saved_models_path = os.listdir(os.path.join(path, config.training.checkpoint_dir))
+    # Get name of saved models
+    saved_models = get_name(saved_models_path)
+    
+    # ---------------------
+    # 5. Test on saved models
+    # ---------------------
+    
+    metrics_list = []
+    # Perform the intersection between the list config.model.model_to_test and saved_models to store only the models that have already been trained and that you want to test
+    model_to_test = [model for model in saved_models if model in config.model.model_to_test]
+    for model in model_to_test:
+        # Test SVM model
+        if 'svm' in model.lower():
+            metrics = test_ml_model(model, config, device, test_dataset)
+        # Test deep learning models
+        else:
+            metrics = test_dl_model(model, config, device, test_dataset)
+            
+        # Store the performances in a list
+        metrics_list.append(metrics)
+
+    # ---------------------
+    # 6. Print performance
+    # ---------------------
+    
+    print("Performance:")
+    print_metrics(metrics_list, model_to_test)
     print("---------------------")
          
     # ---------------------
-    # 9. Compare performance
+    # 7. Compare performance
     # ---------------------
+    
+    # Extract metrics
+    values = extract_list_of_metrics(metrics_list)
+    
+    # The comparison makes sense if at least two models are tested
+    if len(model_to_test) > 1:
+        # Compare performance
+        compare_performance(values, model_to_test)
+        print("---------------------")
         
-    # Initialize an array
-    values = []
-    # Inserts dictionaries containing performance into the array
-    values.append(extract_value(first_metrics))
-    values.append(extract_value(second_metrics))
-    values.append(extract_value(svm_metrics))
-    # Compare performance
-    compare_performance(values[0], values[1], values[2])
-    print("---------------------")
-    # Print performance comparison results
-    if config.graph.create_compare_graph:
-        print_compare_graph(values[0], values[1], values[2], config.graph.view_compare_graph, test=True)
+        # Print performance comparison results
+        if config.graph.create_compare_graph:
+            print_compare_graph(values, model_to_test, config.graph.view_compare_graph, test=True)
 
     print("\nTest finish correctly.\n")

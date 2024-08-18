@@ -90,28 +90,28 @@ def evaluate(model, dataloader, criterion, device):
     # Return metrics and confusion matrix
     return val_metrics, conf_matrix
 
-# Compare performance between the three models
-def compare_performance(first_metrics, second_metrics, svm_metrics):
+# Compare performance between the models
+def compare_performance(metrics_list, model_to_train):
     """
-    Compares the performance of the three models.
+    This function compares the performance metrics between multiple models.
 
-    :param first_metrics: The metrics of the ResNet model.
-    :type first_metrics: List
-    :param first_metrics: The metrics of the AlexNet model.
-    :type first_metrics: List
-    :param second_metrics: The metrics of the SVM model.
-    :type second_metrics: List
+    :param metrics_list: A list of performance metrics for each model.
+    :type metrics_list: list
+    :param model_to_train: A list of model names that were trained.
+    :type model_to_train: list
+    :return: None
     """
+    
     print("Comparing performance:\n")
     # Initialize variables
     labels = ['Test accuracy', 'Test precision', 'Test recall', 'Test f1 score', 'Test loss']
     data = []
     # For each performance metric and model, add them to an array
-    for i in range(len(labels)):
-        data.append([first_metrics[i], second_metrics[i], svm_metrics[i]])
+    for i in range(len(metrics_list)):
+        data.append(metrics_list[i])
     # Print metrics
-    test_result = pd.DataFrame(data, columns=['ResNet model', 'AlexNet model', 'SVM model'], index=labels).round(4)
-    print(test_result)
+    test_result = pd.DataFrame(data, columns=labels, index=model_to_train).round(4)
+    print(test_result.transpose())
 
 # Create the graph for performance metrics
 def print_metrics_graph(training_metrics, validation_metrics, metric_plotted, view, type_model):
@@ -130,82 +130,105 @@ def print_metrics_graph(training_metrics, validation_metrics, metric_plotted, vi
     :type type_model: String
     """
     # Print the graph with for all epochs for training and validation for each performance metric
-    for element in metric_plotted:
-        plt.plot([metrics[element] for metrics in training_metrics], label = 'Training')
-        plt.plot([metrics[element] for metrics in validation_metrics], label = 'Validation')
-        plt.legend()
-        plt.title("Graph of " + str(element) + " per epoch for " + str(type_model) + " model:")
-        # Improves graph visibility
-        plt.tight_layout()
-        save_graph(str('Graph of ' + str(element)), (str(type_model).capitalize() + ' model'))
-        # Check if your configuration likes a print or not
-        if view:
-            plt.show()
-        # Close the graph to avoid overlap
-        plt.close()
+    # For deep learning models
+    if type(training_metrics) == list and type(validation_metrics) == list:
+        for element in metric_plotted:
+            plt.plot([metrics[element] for metrics in training_metrics], label = 'Training')
+            plt.plot([metrics[element] for metrics in validation_metrics], label = 'Validation')
+            plt.legend()
+            plt.title("Graph of " + str(element) + " per epoch for " + str(type_model) + " model:")
+            # Improves graph visibility
+            plt.tight_layout()
+            save_graph(str('Graph of ' + str(element)), (str(type_model).capitalize() + ' model'))
+            # Check if your configuration likes a print or not
+            if view:
+                plt.show()
+            # Close the graph to avoid overlap
+            plt.close()
+    # For machine learning models
+    else: 
+        for element in metric_plotted:
+            current_ticks = plt.gca().get_yticks()
+            # Enter the values of the two bars in the vertical scale
+            new_ticks = np.unique(np.concatenate((current_ticks, [training_metrics[element], validation_metrics[element]])))
+            # Upgrade the vertical scale
+            plt.gca().set_yticks(new_ticks)
+            plt.bar([0], training_metrics[element], label = 'Training')
+            plt.bar([1], validation_metrics[element], label = 'Validation')
+            plt.legend()
+            plt.title("Graph of " + str(element) + " for "+ str(type_model) + " model:")
+            # Improves graph visibility
+            plt.tight_layout()
+            save_graph(str('Graph of ' + str(element)), (str(type_model).capitalize() + ' model'))
+            # Check if your configuration likes a print or not
+            if view:
+                plt.show()
+            # Close the graph to avoid overlap
+            plt.close()
 
-# Create the graph to compare performance of the three models
-def print_compare_graph(first_metrics, second_metrics, svm_metrics, view, test):
+# Create the graph to compare performance of the models
+def print_compare_graph(metrics_list, model_to_train, view, test):
     """
-    Prints a comparison graph of the metrics for three models.
+    This function creates graphs to compare the performance of multiple models.
 
-    :param first_metrics: The metrics of the ResNet model.
-    :type first_metrics: List
-    :param second_metrics: The metrics of the AlexNet model.
-    :type second_metrics: List
-    :param second_metrics: The metrics of the SVM model.
-    :type second_metrics: List
-    :param view: Whether to display the plot.
-    :type view: Bool
-    :param test: Whether the model is in the testing phase.
-    :type test: Bool
+    :param metrics_list: A list of performance metrics for each model.
+    :type metrics_list: list
+    :param model_to_train: A list of model names that were trained.
+    :type model_to_train: list
+    :param view: A boolean indicating whether to display the graphs.
+    :type view: bool
+    :param test: A boolean indicating whether the graphs are for testing results.
+    :type test: bool
+    :return: None
     """
+    
     # Inizialize metris
     metrics = ['accuracy', 'precision', 'recall', 'f1', 'loss']
     # For each metric, print a graph
     for i in range(len(metrics)):
         # Inizialize an array
-        counts = np.zeros(3)
-        # Fill array with i-th performance metrics for each model
-        counts[0] = first_metrics[i]
-        counts[1] = second_metrics[i]
-        counts[2] = svm_metrics[i]
+        counts = np.zeros(len(model_to_train))
+        for j in range(len(model_to_train)):
+            # Fill array with i-th performance metrics for each model
+            counts[j] = metrics_list[j][i]
         # Create a bar graph
-        plt.bar(['ResNet model', 'AlexNet model','SVM model' ], counts, color=['blue', 'orange', 'red', 'yellow', 'purple'])
+        plt.bar(model_to_train, counts, color=['blue', 'orange', 'red', 'yellow', 'purple'])
         # Set labels and title
         plt.xlabel("Models")
         plt.ylabel("Values")
-        plt.title("Comparing " + metrics[i] + " per epoch for the two model:")
+        plt.title("Comparing " + metrics[i] + " per epoch for models:")
         # Retrieve the vertical scale of the graph
         current_ticks = plt.gca().get_yticks()
         # Enter the values of the three bars in the vertical scale
         new_ticks = np.unique(np.concatenate((current_ticks, counts)))
         # Upgrade the vertical scale
         plt.gca().set_yticks(new_ticks)
-        # Horizontal dashed lines at bar levels
-        plt.hlines(counts[0], 0.4, 0.6, colors='green', linestyles='dashed')
-        plt.hlines(counts[1], 0.4, 0.6, colors='green', linestyles='dashed')
-        plt.hlines(counts[1], 1.4, 1.6, colors='green', linestyles='dashed')
-        plt.hlines(counts[2], 1.4, 1.6, colors='green', linestyles='dashed')
-        # Compute gaps
+        # Horizontal dashed lines at bar levels, compute gap and set y position to locate the texts "Difference"
         first_gap = abs(counts[0] - counts[1])
-        second_gap = abs(counts[1] - counts[2])
-        # Set y positions to locate the texts "Difference"
         first_y_pos = max(counts) + 0.02 * max(counts)
-        second_y_pos = max(counts) + 0.02 * max(counts)
+        plt.hlines(counts[0], 0.4, 0.6, colors='green', linestyles='dashed')
+        plt.hlines(counts[1], 0.4, 0.6, colors='green', linestyles='dashed')   
         # Create symbol <-> from minimum to maximum value of the graph (between first and second models)
         plt.annotate('',
                     xy=(0.4, counts[0]), xycoords='data',
                     xytext=(0.6, counts[1]), textcoords='data',
                     arrowprops=dict(arrowstyle='<->', color='red'))
-        # Create symbol <-> from minimum to maximum value of the graph (between second and third models)
-        plt.annotate('',
-                    xy=(1.4, counts[1]), xycoords='data',
-                    xytext=(1.6, counts[2]), textcoords='data',
-                    arrowprops=dict(arrowstyle='<->', color='red'))
         # Texts "Difference"
         plt.text(0.5, first_y_pos, f'Difference: {first_gap:.4f}', ha='center', va='center')
-        plt.text(1.5, second_y_pos, f'Difference: {second_gap:.4f}', ha='center', va='center')
+        # Only in the case where you are interested in comparing the performance of three models
+        if len(model_to_train) == 3:
+            # Horizontal dashed lines at bar levels, compute gap and set y position to locate the texts "Difference"
+            second_gap = abs(counts[1] - counts[2])
+            second_y_pos = max(counts) + 0.02 * max(counts)
+            plt.hlines(counts[1], 1.4, 1.6, colors='green', linestyles='dashed')
+            plt.hlines(counts[2], 1.4, 1.6, colors='green', linestyles='dashed')
+            # Create symbol <-> from minimum to maximum value of the graph (between second and third models)
+            plt.annotate('',
+                        xy=(1.4, counts[1]), xycoords='data',
+                        xytext=(1.6, counts[2]), textcoords='data',
+                        arrowprops=dict(arrowstyle='<->', color='red'))
+            # Texts "Difference"
+            plt.text(1.5, second_y_pos, f'Difference: {second_gap:.4f}', ha='center', va='center')
         # Improves graph visibility
         plt.tight_layout()
         # Save the graph to a specific path
@@ -380,3 +403,58 @@ def print_scree_graph(pca, test, view):
         plt.show()
     # Close the graph to avoid overlap
     plt.close()
+
+# Extracts metric values from the dictionary
+def extract_value(metrics):
+    """
+    Extracts the values from the metrics.
+
+    :param metrics: The metrics to extract values from.
+    :type metrics: dict
+    :return: Returns a list of the extracted values.
+    :rtype: list
+    """
+    # Initialize an array
+    values = []
+    # Iterates through dictionary values and adds them to the list
+    for key, value in metrics.items():
+        values.append(value)
+    # Return the list
+    return values
+
+# Extract the names of the models from their paths
+def get_name(saved_models_path):
+    """
+    This function extracts the names of the models from their saved file paths.
+
+    :param saved_models_path: A list of file paths where the models are saved.
+    :type saved_models_path: list
+    :return: Returns a list of model names based on the file paths.
+    :rtype: list
+    """
+    
+    name = []
+    for path in saved_models_path:
+        if "svm" in path.lower():
+            name.append("SVM")
+        elif "resnet" in path.lower():
+            name.append("ResNet")
+        elif "alexnet" in path.lower():
+            name.append("AlexNet")
+    return name
+
+# Extract a list of metrics from a list of dictionaries
+def extract_list_of_metrics(list_of_dictionary):
+    """
+    This function extracts a list of metrics from a list of dictionaries.
+
+    :param list_of_dictionary: A list of dictionaries containing metrics.
+    :type list_of_dictionary: list
+    :return: Returns a list of metrics extracted from the dictionaries.
+    :rtype: list
+    """
+    
+    list_of_metrics = []
+    for dictionary in list_of_dictionary:
+        list_of_metrics.append(extract_value(dictionary))
+    return list_of_metrics

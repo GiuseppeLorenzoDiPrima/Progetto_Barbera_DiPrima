@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>test module &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+  <title>test module &mdash; Chest_XRay 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -34,7 +34,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            Progetto Barbera DiPrima
+            Chest_XRay
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,13 +46,14 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Progetto completo</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Progetto esame</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="data_classes.html">data_classes package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extract_representations.html">extract_representations package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model_classes.html">model_classes package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">test module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#test.extract_value"><code class="docutils literal notranslate"><span class="pre">extract_value()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#test.print_metrics"><code class="docutils literal notranslate"><span class="pre">print_metrics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test.test_dl_model"><code class="docutils literal notranslate"><span class="pre">test_dl_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test.test_ml_model"><code class="docutils literal notranslate"><span class="pre">test_ml_model()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="train.html">train module</a></li>
@@ -67,7 +68,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Progetto Barbera DiPrima</a>
+          <a href="index.html">Chest_XRay</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -75,7 +76,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">Progetto completo</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Progetto esame</a></li>
       <li class="breadcrumb-item active">test module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/test.rst.txt" rel="nofollow"> View page source</a>
@@ -89,29 +90,59 @@
   <section id="module-test">
 <span id="test-module"></span><h1>test module<a class="headerlink" href="#module-test" title="Link to this heading"></a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="test.extract_value">
-<span class="sig-prename descclassname"><span class="pre">test.</span></span><span class="sig-name descname"><span class="pre">extract_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/test.html#extract_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#test.extract_value" title="Link to this definition"></a></dt>
-<dd><p>Extracts the values from the metrics.</p>
+<dt class="sig sig-object py" id="test.print_metrics">
+<span class="sig-prename descclassname"><span class="pre">test.</span></span><span class="sig-name descname"><span class="pre">print_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_metrics</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_models</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/test.html#print_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#test.print_metrics" title="Link to this definition"></a></dt>
+<dd><p>Prints the metrics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metrics</strong> (<em>dict</em>) – The metrics to extract values from.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Returns a list of the extracted values.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_of_metrics</strong> (<em>list</em><em> of </em><em>dict</em>) – The list of metrics to print.</p></li>
+<li><p><strong>saved_models</strong> (<em>list</em><em> of </em><em>str</em>) – The list of saved model names.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="test.print_metrics">
-<span class="sig-prename descclassname"><span class="pre">test.</span></span><span class="sig-name descname"><span class="pre">print_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/test.html#print_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#test.print_metrics" title="Link to this definition"></a></dt>
-<dd><p>Prints the metrics.</p>
+<dt class="sig sig-object py" id="test.test_dl_model">
+<span class="sig-prename descclassname"><span class="pre">test.</span></span><span class="sig-name descname"><span class="pre">test_dl_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/test.html#test_dl_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#test.test_dl_model" title="Link to this definition"></a></dt>
+<dd><p>This function tests a deep learning model on a test dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metrics</strong> (<em>Dictionary</em>) – The metrics to print.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em>) – The name of the model to be tested (e.g., ‘ResNet’, ‘AlexNet’).</p></li>
+<li><p><strong>config</strong> (<em>object</em>) – The configuration settings for testing the model.</p></li>
+<li><p><strong>device</strong> (<em>str</em>) – The device on which to test the model (e.g., ‘cpu’, ‘cuda’).</p></li>
+<li><p><strong>test_dataset</strong> (<em>torch.utils.data.Dataset</em>) – The dataset used for testing the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the metrics for the test dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.test_ml_model">
+<span class="sig-prename descclassname"><span class="pre">test.</span></span><span class="sig-name descname"><span class="pre">test_ml_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/test.html#test_ml_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#test.test_ml_model" title="Link to this definition"></a></dt>
+<dd><p>This function tests a machine learning model on a test dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em>) – The name of the model to be tested (e.g., ‘SVM’).</p></li>
+<li><p><strong>config</strong> (<em>object</em>) – The configuration settings for testing the model.</p></li>
+<li><p><strong>device</strong> (<em>str</em>) – The device on which to test the model (e.g., ‘cpu’, ‘cuda’).</p></li>
+<li><p><strong>test_dataset</strong> (<em>torch.utils.data.Dataset</em>) – The dataset used for testing the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the metrics for the test dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -129,7 +160,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+    <p>&#169; Copyright 2024, Barbera and Di Prima.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

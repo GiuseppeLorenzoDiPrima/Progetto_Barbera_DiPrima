@@ -171,6 +171,8 @@ Through the use of the base_config.yaml file, it is possible to modify the confi
 - `classification.type` you can choose between a binary ([NORMAL] [PNEUMONIA]) or ternary ([NORMAL] [BACTERIA] [VIRUS]) classification.
 - `create_dataset_graph` you can choose to create [TRUE] or not [FALSE] dataset graph.
 - `view_dataset_graph` you can choose to view [TRUE] or not [FALSE] dataset graph during execution.
+- `model_to_train` you can choose the model you want to train.
+- `model_to_test` you can choose the model you want to test if they have been correct trained yet.
 - `create_model_graph` you can choose to create [TRUE] or not [FALSE] models graph.
 - `view_model_graph` you can choose to view [TRUE] or not [FALSE] models graph.
 - `create_compare_graph` you can choose to create [TRUE] or not [FALSE] compare graph.

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>data_classes package &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+  <title>data_classes package &mdash; Chest_XRay 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="extract_representations package" href="extract_representations.html" />
-    <link rel="prev" title="Progetto completo" href="modules.html" /> 
+    <link rel="prev" title="Progetto esame" href="modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -34,7 +34,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            Progetto Barbera DiPrima
+            Chest_XRay
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,7 +46,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Progetto completo</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Progetto esame</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">data_classes package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-data_classes.manage_dataset">data_classes.manage_dataset module</a><ul>
@@ -88,7 +88,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Progetto Barbera DiPrima</a>
+          <a href="index.html">Chest_XRay</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -96,7 +96,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">Progetto completo</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Progetto esame</a></li>
       <li class="breadcrumb-item active">data_classes package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/data_classes.rst.txt" rel="nofollow"> View page source</a>
@@ -119,15 +119,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">ChestXrayDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#ChestXrayDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.ChestXrayDataset" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
 <p>A Dataset for chest X-ray images.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>type</strong> (<em>str</em>) – The type of the dataset (e.g., ‘train’, ‘val’, ‘test’).</p></li>
-<li><p><strong>root</strong> (<em>str</em>) – The root directory of the dataset.</p></li>
-<li><p><strong>classes</strong> (<em>list</em>) – The classes in the dataset.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -135,11 +126,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">LabelPreservingConcatDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#LabelPreservingConcatDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.LabelPreservingConcatDataset" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ConcatDataset</span></code></p>
 <p>A ConcatDataset that preserves the labels of the original datasets.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>datasets</strong> (<em>list</em>) – The datasets to concatenate.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -147,14 +133,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">LabelPreservingSubset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#LabelPreservingSubset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.LabelPreservingSubset" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Subset</span></code></p>
 <p>A Subset that preserves the labels of the original dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset</strong> (<em>Dataset</em>) – The original dataset.</p></li>
-<li><p><strong>indices</strong> (<em>list</em>) – The indices of the subset.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -300,13 +278,14 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_classes.manage_dataset.resize_datasets">
-<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">resize_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#resize_datasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.resize_datasets" title="Link to this definition"></a></dt>
-<dd><p>Resizes the datasets to have a 90% and 10% split.</p>
+<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">resize_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_percentage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#resize_datasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.resize_datasets" title="Link to this definition"></a></dt>
+<dd><p>Resizes the datasets to have a split_percentage% and (100 - split_percentage)% split for training and validation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>train_dataset</strong> (<em>Dataset</em>) – The training dataset.</p></li>
 <li><p><strong>val_dataset</strong> (<em>Dataset</em>) – The validation dataset.</p></li>
+<li><p><strong>split_percentage</strong> (<em>float</em>) – The percentage of the combined dataset to be used for training.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -320,14 +299,24 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_classes.manage_dataset.split_binary_directory">
-<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">split_binary_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#split_binary_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.split_binary_directory" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">split_binary_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#split_binary_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.split_binary_directory" title="Link to this definition"></a></dt>
 <dd><p>Splits the directory into a binary structure by moving ‘BACTERIA’ and ‘VIRUS’ files into a ‘PNEUMONIA’ directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_path</strong> (<em>str</em>) – The path to the dataset directory.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="data_classes.manage_dataset.split_ternary_directory">
-<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">split_ternary_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#split_ternary_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.split_ternary_directory" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_classes.manage_dataset.</span></span><span class="sig-name descname"><span class="pre">split_ternary_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_classes/manage_dataset.html#split_ternary_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_classes.manage_dataset.split_ternary_directory" title="Link to this definition"></a></dt>
 <dd><p>Splits the directory into a ternary structure by moving files from the ‘PNEUMONIA’ directory to ‘BACTERIA’ and ‘VIRUS’ directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_path</strong> (<em>str</em>) – The path to the dataset directory.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -390,14 +379,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modules.html" class="btn btn-neutral float-left" title="Progetto completo" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="Progetto esame" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="extract_representations.html" class="btn btn-neutral float-right" title="extract_representations package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+    <p>&#169; Copyright 2024, Barbera and Di Prima.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

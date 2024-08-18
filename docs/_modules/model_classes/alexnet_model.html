@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>model_classes.alexnet_model &mdash; Progetto Barbera DiPrima 1.0 documentation</title>
+  <title>model_classes.alexnet_model &mdash; Chest_XRay 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -31,7 +31,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            Progetto Barbera DiPrima
+            Chest_XRay
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -41,15 +41,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Progetto esame</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Progetto Barbera DiPrima</a>
+          <a href="../../index.html">Chest_XRay</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -78,21 +81,24 @@
 <span class="k">class</span> <span class="nc">AlexNet</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A PyTorch implementation of the AlexNet model.</span>
-
-<span class="sd">    :param type_net: The type of the network (e.g., &#39;binary&#39;, &#39;ternary&#39;).</span>
-<span class="sd">    :type type_net: str</span>
-<span class="sd">    :param stride_size: The stride size for the convolutional layers.</span>
-<span class="sd">    :type stride_size: list</span>
-<span class="sd">    :param padding_size: The padding size for the convolutional layers.</span>
-<span class="sd">    :type padding_size: list</span>
-<span class="sd">    :param kernel_size: The kernel size for the convolutional and pooling layers.</span>
-<span class="sd">    :type kernel_size: list</span>
-<span class="sd">    :param channels_of_color: The number of color channels in the input images.</span>
-<span class="sd">    :type channels_of_color: int</span>
-<span class="sd">    :param inplace: Whether to use inplace ReLU.</span>
-<span class="sd">    :type inplace: bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_net</span><span class="p">,</span> <span class="n">stride_size</span><span class="p">,</span> <span class="n">padding_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">channels_of_color</span><span class="p">,</span> <span class="n">inplace</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A PyTorch implementation of the AlexNet model.</span>
+
+<span class="sd">        :param type_net: The type of the network (e.g., &#39;binary&#39;, &#39;ternary&#39;).</span>
+<span class="sd">        :type type_net: str</span>
+<span class="sd">        :param stride_size: The stride size for the convolutional layers.</span>
+<span class="sd">        :type stride_size: list</span>
+<span class="sd">        :param padding_size: The padding size for the convolutional layers.</span>
+<span class="sd">        :type padding_size: list</span>
+<span class="sd">        :param kernel_size: The kernel size for the convolutional and pooling layers.</span>
+<span class="sd">        :type kernel_size: list</span>
+<span class="sd">        :param channels_of_color: The number of color channels in the input images.</span>
+<span class="sd">        :type channels_of_color: int</span>
+<span class="sd">        :param inplace: Whether to use inplace ReLU.</span>
+<span class="sd">        :type inplace: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">AlexNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="c1"># Set the number of classes according to the configuration you choose</span>
         <span class="k">if</span> <span class="n">type_net</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
@@ -157,7 +163,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Barbera A. e Di Prima G. L..</p>
+    <p>&#169; Copyright 2024, Barbera and Di Prima.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

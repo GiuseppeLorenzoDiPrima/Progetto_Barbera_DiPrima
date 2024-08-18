@@ -6,21 +6,24 @@ import torch.nn as nn
 class AlexNet(nn.Module):
     """
     A PyTorch implementation of the AlexNet model.
-
-    :param type_net: The type of the network (e.g., 'binary', 'ternary').
-    :type type_net: str
-    :param stride_size: The stride size for the convolutional layers.
-    :type stride_size: list
-    :param padding_size: The padding size for the convolutional layers.
-    :type padding_size: list
-    :param kernel_size: The kernel size for the convolutional and pooling layers.
-    :type kernel_size: list
-    :param channels_of_color: The number of color channels in the input images.
-    :type channels_of_color: int
-    :param inplace: Whether to use inplace ReLU.
-    :type inplace: bool
     """
     def __init__(self, type_net, stride_size, padding_size, kernel_size, channels_of_color, inplace):
+        """
+        A PyTorch implementation of the AlexNet model.
+
+        :param type_net: The type of the network (e.g., 'binary', 'ternary').
+        :type type_net: str
+        :param stride_size: The stride size for the convolutional layers.
+        :type stride_size: list
+        :param padding_size: The padding size for the convolutional layers.
+        :type padding_size: list
+        :param kernel_size: The kernel size for the convolutional and pooling layers.
+        :type kernel_size: list
+        :param channels_of_color: The number of color channels in the input images.
+        :type channels_of_color: int
+        :param inplace: Whether to use inplace ReLU.
+        :type inplace: bool
+        """
         super(AlexNet, self).__init__()
         # Set the number of classes according to the configuration you choose
         if type_net.lower() == 'binary':

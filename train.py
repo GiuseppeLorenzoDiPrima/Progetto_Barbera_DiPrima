@@ -2,6 +2,7 @@
 # python -u train.py -c config/base_config.yaml
 
 # Documentation command [execute in path "..\docs"]: .\make.bat html
+# Documentation command [execute in path ".."]: sphinx-apidoc -o doc .
 
 # Standard library imports
 import os
@@ -14,6 +15,8 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from joblib import dump
+from sklearn import svm
+from sklearn.metrics import hinge_loss, log_loss
 
 # Configuration and utility imports
 from yaml_config_override import add_arguments
@@ -23,12 +26,11 @@ from addict import Dict
 from data_classes.manage_dataset import *
 from model_classes.resnet_model import ResNet, ResidualBlock
 from model_classes.alexnet_model import AlexNet
-from model_classes.svm_model import SVM
 from utils import *
 from extract_representations.vision_embeddings import VisionEmbeddings
 
 
-# Train a training epoch
+# Train a training epoch for deep learning model
 def train_one_epoch(model, dataloader, criterion, optimizer, scheduler, device):
     """
     Trains a model for one epoch.
@@ -124,7 +126,7 @@ def manage_best_model_and_metrics(model, evaluation_metric, val_metrics, best_va
     return best_val_metric, best_model
 
 # Train deep learning models
-def train_model(model, config, train_dl, device, criterion):
+def train_model(model, config, train_dl, val_dl, device, criterion):
     """
     This function trains a model given a training dataset, a device, and a criterion.
 
@@ -134,6 +136,8 @@ def train_model(model, config, train_dl, device, criterion):
     :type config: Config
     :param train_dl: The DataLoader for the training dataset.
     :type train_dl: torch.utils.data.DataLoader
+    :param val_dl: The DataLoader for the validation dataset.
+    :type val_dl: torch.utils.data.DataLoader
     :param device: The device on which to train the model (e.g., 'cpu', 'cuda').
     :type device: str
     :param criterion: The criterion to use for calculating loss during training.
@@ -150,15 +154,15 @@ def train_model(model, config, train_dl, device, criterion):
     else:
         string_model = "AlexNet model -"
     # Select the optimization algorithm based on the configuration chosen in the config
-    if config.training.optimizer.lower() == 'adam':
+    if config.deep_learning_training.optimizer.lower() == 'adam':
         optimizer = torch.optim.Adam(model.parameters(), lr=config.training.learning_rate)
-    elif config.training.optimizer.lower() == 'sgd':
+    elif config.deep_learning_training.optimizer.lower() == 'sgd':
         optimizer = torch.optim.SGD(model.parameters(), lr=config.training.learning_rate)
     else:
         optimizer = torch.optim.RMSprop(model.parameters(), lr=config.training.learning_rate)
     # learning rate scheduler
-    total_steps = len(train_dl) * config.training.epochs
-    warmup_steps = int(total_steps * config.training.warmup_ratio)
+    total_steps = len(train_dl) * config.deep_learning_training.epochs
+    warmup_steps = int(total_steps * config.deep_learning_training.warmup_ratio)
     # Warmup for [warmup_ratio]% and linear decay
     scheduler_lambda = lambda step: (step / warmup_steps) if step < warmup_steps else max(0.0, (total_steps - step) / (total_steps - warmup_steps))
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=scheduler_lambda)
@@ -172,8 +176,8 @@ def train_model(model, config, train_dl, device, criterion):
     best_model = None
     no_valid_epochs = 0
     # Training cycle that iterates through all epochs
-    for epoch in range(config.training.epochs):
-        print("%s Epoch %d/%d" % (string_model, (epoch + 1), config.training.epochs))
+    for epoch in range(config.deep_learning_training.epochs):
+        print("%s Epoch %d/%d" % (string_model, (epoch + 1), config.deep_learning_training.epochs))
         # Train an epoch and calculate performance on training
         train_metrics = train_one_epoch(model, train_dl, criterion, optimizer, scheduler, device)
         # Add the performance to the list that will contain the history of all the training performance
@@ -245,89 +249,272 @@ def evaluate_model(best_val_metric, best_model, test_set, criterion, device, typ
     # Return performance metrics and confusion matrix
     return metrics, conf_matrix
 
-# Train svm model
-def train_smv_model(model, train, validation, config, criterion):
+# Train the machine learning model
+def train_ml_model(model_name, config, device, train_dataset, val_dataset, test_dataset):
     """
-    Trains the SVM model, evaluates it applying early stopping and scheduler learning rate.
+    This function trains a machine learning model and evaluates its performance.
 
-    :param model: The SVM model to be trained.
-    :type model: SVM class
-    :param train: The training dataset.
-    :type train: SVM_dataset
-    :param validation: The validation dataset.
-    :type validation: SVM_dataset
-    :param config: The configuration settings.
-    :type config: Dict(add_arguments())
-    :param criterion: The loss function to use.
-    :type criterion: Function
-    :return: The best validation metrics, the best model, and the lists of training and validation metrics.
-    :rtype: Tuple (best_val_metric, best_model, training_metrics_list, validation_metrics_list)
+    :param model_name: The name of the model to be trained (e.g., 'SVM', 'ResNet').
+    :type model_name: str
+    :param config: The configuration settings for training the model.
+    :type config: object
+    :param device: The device on which to train the model (e.g., 'cpu', 'cuda').
+    :type device: str
+    :param train_dataset: The dataset used for training the model.
+    :type train_dataset: torch.utils.data.Dataset
+    :param val_dataset: The dataset used for validating the model during training.
+    :type val_dataset: torch.utils.data.Dataset
+    :param test_dataset: The dataset used for testing the model after training.
+    :type test_dataset: torch.utils.data.Dataset
+    :return: Returns the metrics for the test dataset.
+    :rtype: dict
     """
-    # Initializing the best performance metrics and the other variables
-    training_metrics_list = []
-    validation_metrics_list = []
-    best_val_metric = {'accuracy': float, 'precision': float, 'recall': float, 'f1': float, 'loss': float}
-    best_model = None
-    no_valid_epochs = 0
-    if config.training.best_metric_lower_is_better:
-        best_val_metric[config.training.evaluation_metric.lower()] = float('inf')
+    print("---------------------")
+    
+    # ---------------------
+    # 1. Compute dataset for svm
+    # ---------------------
+    
+    # Use vision embedding to create features from tensor for SVM model
+    vision_embeddings = VisionEmbeddings(model_name='google/vit-base-patch16-224', device=device)
+    print("Vision embeddings for SVM:\n")
+    # Extract new dataset using embeddings
+    train_svm, validation_svm, test_svm = vision_embeddings.extract_all_datasets(
+        train_dataset,
+        val_dataset,
+        test_dataset,
+        config.data.principal_component,
+        config.training.checkpoint_dir,
+        config.graph.create_model_graph,
+        config.graph.view_model_graph
+    )
+    print("---------------------")
+    
+    # ---------------------
+    # 2. Load model
+    # ---------------------
+    
+    # Load the templates and specify their configuration through the config variable
+    
+    # SVM model
+    svm_model = svm.SVC(
+        gamma=config.svm_training.gamma,
+        kernel=config.svm_training.kernel,
+        C=config.svm_training.C,
+        probability=config.svm_training.probability
+    )
+
+    # ---------------------
+    # 3. Train model
+    # ---------------------
+    
+    print("Training SVM model:\n")
+    svm_model.fit(train_svm.features, train_svm.labels)
+    
+    # Compute the performance of the model on the train_dataset
+    train_metrics_svm = compute_metrics(train_svm.labels, svm_model.predict(train_svm.features))
+    # Compute the performance of the model on the validation_dataset
+    validation_metrics_svm = compute_metrics(validation_svm.labels, svm_model.predict(validation_svm.features))
+    # If it is a binary classification, use hinge_loss as the loss function; otherwise, use log_loss
+    if config.classification.type.lower() == 'binary':
+        # Compute the loss using hinge_loss
+        train_metrics_svm['loss'] = hinge_loss(train_svm.labels, svm_model.predict(train_svm.features))
+        validation_metrics_svm['loss'] = hinge_loss(validation_svm.labels, svm_model.predict(validation_svm.features))
     else:
-        best_val_metric[config.training.evaluation_metric.lower()] = float('-inf')
-    # Print some statistics
-    print("Samples: " + str(train.num_of_samples) + " - Features: " + str(train.num_of_features) + "\n")
-    # For epochs in range (0, number of total epochs * 2)
-    for epoch in range(config.training.epochs * 2):
-        print("SVM model - Epoch %d/%d" % ((epoch + 1), (config.training.epochs * 2)))
-        # Scheduler learning rate
-        learning_rate = 1 / (500 + ((epoch ** 2) + (epoch * 5)))
-        # Train an epoch and calculate performance on training
-        train_metrics = model.fit(train, criterion, learning_rate)
-        # Add the performance to the list that will contain the history of all the training performance
-        training_metrics_list.append(train_metrics)
-        # Calculate performance on validation
-        val_metrics, conf_matrix = model.evaluate_svm(validation, criterion)
-        # Add the performance to the list that will contain the history of all the validation performance
-        validation_metrics_list.append(val_metrics)
-        # Print results
-        print(f"Train loss: {train_metrics['loss']:.4f} - Train accuracy: {train_metrics['accuracy']:.4f}")
-        print(f"Val loss: {val_metrics['loss']:.4f} - Val accuracy: {val_metrics['accuracy']:.4f}")
-        # Calculates the new best model and new best performance as a result of the last training
-        best_val_metric, best_model = manage_best_model_and_metrics(
-            model, 
-            config.training.evaluation_metric, 
-            val_metrics, 
-            best_val_metric, 
-            best_model, 
-            config.training.best_metric_lower_is_better
-        )
-        # Early stopping
-        if config.training.early_stopping_metric.lower() == 'loss':
-            # If performance is not improved, the early stopping counter increases by one
-            if val_metrics[config.training.early_stopping_metric.lower()] > best_val_metric[config.training.early_stopping_metric.lower()]:
-                no_valid_epochs += 1
-        else:
-            # If performance is not improved, the early stopping counter increases by one
-            if val_metrics[config.training.early_stopping_metric.lower()] < best_val_metric[config.training.early_stopping_metric.lower()]:
-                no_valid_epochs += 1
-        # If you have reached the maximum value chosen through the config file, end the training
-        if no_valid_epochs == config.training.earling_stopping_max_no_valid_epochs:
-            print(f"The training process has ended because the maximum value of early stopping, which is {config.training.earling_stopping_max_no_valid_epochs:}, has been reached.")
-            break
-    return best_val_metric, best_model, training_metrics_list, validation_metrics_list
+        # Compute the loss using log_loss
+        train_metrics_svm['loss'] = log_loss(train_svm.labels, svm_model.predict_proba(train_svm.features))
+        validation_metrics_svm['loss'] = log_loss(validation_svm.labels, svm_model.predict_proba(validation_svm.features))
+    # Print computed performances
+    print(f"Train loss: {train_metrics_svm['loss']:.4f} - Train accuracy: {train_metrics_svm['accuracy']:.4f}")
+    print(f"Val loss: {validation_metrics_svm['loss']:.4f} - Val accuracy: {validation_metrics_svm['accuracy']:.4f}")
+    # Depending on the configuration you choose, create graphs for model
+    if config.graph.create_model_graph:
+        print_metrics_graph(train_metrics_svm, validation_metrics_svm, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model=model_name)
+        
+    # --------------------------------
+    # 4. Evaluate model on test set
+    # --------------------------------
+    
+    print("---------------------")
+    print("Testing SVM model on test dataset...\n")
+    # Evaluate the performance of the SVM model on the test_dataset
+    svm_metrics = compute_metrics(test_svm.labels, svm_model.predict(test_svm.features))
+    # If it is a binary classification, use hinge_loss as the loss function; otherwise, use log_loss
+    if config.classification.type.lower() == 'binary':
+        # Compute the loss using hinge_loss
+        svm_metrics['loss'] = hinge_loss(test_svm.labels, svm_model.predict(test_svm.features))
+    else:
+        # Compute the loss using log_loss
+        svm_metrics['loss'] = log_loss(test_svm.labels, svm_model.predict_proba(test_svm.features))
+    # Compute the confusion matrix for test
+    svm_conf_matrix = confusion_matrix(test_svm.labels, svm_model.predict(test_svm.features))
+    # Print evaluation on test dataset
+    print_evaluation(svm_metrics)    
+    print()
+    # Prints the confusion matrix of SVM model 
+    print_confusion_matrix(svm_conf_matrix, type_model=model_name)
+    print("---------------------")
+    # Depending on the configuration you choose, create graphs for confusion matrix
+    if config.graph.create_model_graph:
+        print_confusion_matrix_graph(svm_conf_matrix, config.graph.view_model_graph, type_model=model_name, test=False)
+        
+    # ---------------------
+    # 5. Save model
+    # ---------------------
+        
+    # Verify that the checkpoint folder passed by the configuration parameter exists
+    os.makedirs(config.training.checkpoint_dir, exist_ok=True)
+    # Store model weights in the checkpoin folder
+    dump(svm_model, f"{config.training.checkpoint_dir}/{model_name}_best_model.pkl")
+    print("\n" + model_name + " saved.") 
+    return extract_value(svm_metrics)
+  
+# Train the deep learning model
+def train_dl_model(model_name, config, device, train_dataset, val_dataset, test_dataset):
+    """
+    This function trains a deep learning model and evaluates its performance.
 
+    :param model_name: The name of the model to be trained (e.g., 'ResNet', 'AlexNet').
+    :type model_name: str
+    :param config: The configuration settings for training the model.
+    :type config: object
+    :param device: The device on which to train the model (e.g., 'cpu', 'cuda').
+    :type device: str
+    :param train_dataset: The dataset used for training the model.
+    :type train_dataset: torch.utils.data.Dataset
+    :param val_dataset: The dataset used for validating the model during training.
+    :type val_dataset: torch.utils.data.Dataset
+    :param test_dataset: The dataset used for testing the model after training.
+    :type test_dataset: torch.utils.data.Dataset
+    :return: Returns the metrics for the test dataset.
+    :rtype: dict
+    """
+    
+    # ---------------------
+    # 1. Load data
+    # ---------------------    
+    
+    # --- Oversampling for deep learning models ---
+    # Compute class count for each class
+    targets = torch.tensor(train_dataset.targets)
+    class_counts = torch.bincount(targets)
+    # Compute weights for each class [weight is inversely proportional to class_count]
+    class_weights = 1. / class_counts.float()
+    # Give a sample the weight of its class
+    sample_weights = class_weights[train_dataset.targets] * config.data.strength_of_oversampling
+    # Create a bilanced sampler
+    sampler = torch.utils.data.WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
+    
+    # Loading the train_dataset
+    train_dl = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=config.deep_learning_training.batch_size,
+        shuffle=False, # Shuffling is mutually exclusive with sampler
+        sampler=sampler
+    )
+    
+    # Loading the train_dataset
+    val_dl = torch.utils.data.DataLoader(
+        val_dataset,
+        batch_size=config.deep_learning_training.batch_size,
+        shuffle=False # Without shuffling the data
+    )
+    
+    # Loading the train_dataset
+    test_dl = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=config.deep_learning_training.batch_size,
+        shuffle=False # Without shuffling the data
+    )
+    print("---------------------")
+    
+    # ---------------------
+    # 2. Load model
+    # ---------------------
+    
+    # Load the templates and specify their configuration through the config variable
+    
+    # ResNet model
+    if 'resnet' in model_name.lower():
+        model = ResNet(
+            ResidualBlock,
+            config.ResNet_model.layers,
+            config.classification.type,
+            config.ResNet_model.stride,
+            config.ResNet_model.padding,
+            config.ResNet_model.kernel,
+            config.ResNet_model.channels_of_color,
+            config.ResNet_model.planes,
+            config.ResNet_model.in_features,
+            config.ResNet_model.inplanes
+        )
+        model.to(device)
+        
+    # AlexNet model
+    else:
+        model = AlexNet(
+        config.classification.type,
+        config.AlexNet_model.stride,
+        config.AlexNet_model.padding,
+        config.AlexNet_model.kernel,
+        config.AlexNet_model.channels_of_color,
+        config.AlexNet_model.inplace,
+        )
+        model.to(device)
+
+    # ---------------------
+    # 3. Train model
+    # ---------------------
+    
+    # Set up loss function
+    criterion = nn.CrossEntropyLoss()
+    
+    print("Training " + model_name + " model:\n")
+    # Train the model
+    best_val_metric, best_model, training_metrics, validation_metrics = train_model(model, config, train_dl, val_dl, device, criterion)
+    # Depending on the configuration you choose, create graphs for performance
+    if config.graph.create_model_graph:
+        print_metrics_graph(training_metrics, validation_metrics, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model=model_name)
+        
+    # --------------------------------
+    # 4. Evaluate model on test set
+    # --------------------------------
+    
+    # Evaluate the performance of the model on the test_dataset
+    metrics, conf_matrix = evaluate_model(best_val_metric, best_model, test_dl, criterion, device, type_model=model_name)
+    print()
+    # Prints the confusion matrix of the model
+    print_confusion_matrix(conf_matrix, type_model=model_name)
+    
+    # Depending on the configuration you choose, create graphs for confusion matrix
+    if config.graph.create_model_graph:
+        print_confusion_matrix_graph(conf_matrix, config.graph.view_model_graph, type_model=model_name, test=False)
+    
+    # ---------------------
+    # 5. Save model
+    # ---------------------
+        
+    # Verify that the checkpoint folder passed by the configuration parameter exists
+    os.makedirs(config.training.checkpoint_dir, exist_ok=True)
+    # Store model weights in the checkpoin folder
+    torch.save(best_model.state_dict(), f"{config.training.checkpoint_dir}/{model_name}_best_model.pt")
+    print("---------------------")
+    print(model_name + " saved.")
+    return metrics
+
+
+# Main
 if __name__ == '__main__':
     """
     The main script for training and evaluating the models.
 
     The script performs the following steps:
-    1. Parse the configuration.
-    2. Set the device for training.
-    3. Load the data.
-    4. Load the models.
-    5. Train the models.
-    6. Evaluate the models on the test set.
-    7. Compare the performance of the models.
-    8. Save the models.
+    
+    1. Parse configuration
+    2. Device configuration
+    3. Load data
+    4. Train model
+    5. Compare performance
     """
     
     # ---------------------
@@ -346,6 +533,7 @@ if __name__ == '__main__':
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
+    # Print selected device
     print("\nDevice: " + torch.cuda.get_device_name()) 
     print("---------------------")
     
@@ -359,166 +547,33 @@ if __name__ == '__main__':
     else:    
         train_dataset, val_dataset, test_dataset = ternary_load(config)
         
-    # Use vision embedding to create features from tensor for SVM model
-    vision_embeddings = VisionEmbeddings(model_name='google/vit-base-patch16-224', device=device)
-    print("Vision embeddings for SVM:\n")
-    # Extract new dataset using embeddings
-    train_svm, validation_svm, test_svm = vision_embeddings.extract_all_datasets(
-        train_dataset,
-        val_dataset,
-        test_dataset,
-        config.data.principal_component,
-        config.training.checkpoint_dir,
-        config.graph.create_model_graph,
-        config.graph.view_model_graph
-    )
-    
-    # --- Oversampling for deep learning models ---
-    # Compute class count for each class
-    targets = torch.tensor(train_dataset.targets)
-    class_counts = torch.bincount(targets)
-    # Compute weights for each class [weight is inversely proportional to class_count]
-    class_weights = 1. / class_counts.float()
-    # Give a sample the weight of its class
-    sample_weights = class_weights[train_dataset.targets] * config.data.strength_of_oversampling
-    # Create a bilanced sampler
-    sampler = torch.utils.data.WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
-    
-    # Loading the train_dataset
-    train_dl = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=config.training.batch_size,
-        shuffle=False, # Shuffling is mutually exclusive with sampler
-        sampler=sampler
-    )
-    
-    # Loading the train_dataset
-    val_dl = torch.utils.data.DataLoader(
-        val_dataset,
-        batch_size=config.training.batch_size,
-        shuffle=False # Without shuffling the data
-    )
-    
-    # Loading the train_dataset
-    test_dl = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=config.training.batch_size,
-        shuffle=False # Without shuffling the data
-    )
-    print("---------------------")
-    
     # ---------------------
-    # 4. Load model
+    # 4. Train model
     # ---------------------
     
-    # Load the templates and specify their configuration through the config variable
-    
-    # ResNet model
-    first_model = ResNet(
-        ResidualBlock,
-        config.ResNet_model.layers,
-        config.classification.type,
-        config.ResNet_model.stride,
-        config.ResNet_model.padding,
-        config.ResNet_model.kernel,
-        config.ResNet_model.channels_of_color,
-        config.ResNet_model.planes,
-        config.ResNet_model.in_features,
-        config.ResNet_model.inplanes
-    )
-    first_model.to(device)
-    
-    # AlexNet model
-    second_model = AlexNet(
-        config.classification.type,
-        config.AlexNet_model.stride,
-        config.AlexNet_model.padding,
-        config.AlexNet_model.kernel,
-        config.AlexNet_model.channels_of_color,
-        config.AlexNet_model.inplace,
-    )
-    second_model.to(device)
-    
-    # SVM model
-    svm_model = SVM(config.training.epochs, config.training.learning_rate, train_svm.num_of_features)
-    
-    # ---------------------
-    # 5. Train model
-    # ---------------------
-    
-    # Set up loss function
-    criterion = nn.CrossEntropyLoss()
-    criterion_svm = svm_model.hinge_loss
-    
-    print("Training deep learning models:\n")
-    # Train the ResNet model
-    first_best_val_metric, first_best_model, first_training_metrics, first_validation_metrics = train_model(first_model, config, train_dl, device, criterion)
-    print("---------------------")
-    # Train the AlexNet model
-    second_best_val_metric, second_best_model, second_training_metrics, second_validation_metrics = train_model(second_model, config, train_dl, device, criterion)
-    print("---------------------")
-    print("Training SVM model:")
-    # Train SVM model
-    best_val_metric_svm, best_model_svm, train_metrics_svm, validation_metrics_svm = train_smv_model(svm_model, train_svm, validation_svm, config, criterion_svm)
-    # Depending on the configuration you choose, create graphs for performance
-    if config.graph.create_model_graph:
-        print_metrics_graph(first_training_metrics, first_validation_metrics, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model='ResNet')
-        print_metrics_graph(second_training_metrics, second_validation_metrics, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model='AlexNet')
-        print_metrics_graph(train_metrics_svm, validation_metrics_svm, config.graph.metric_plotted_during_traininig, config.graph.view_model_graph, type_model='SVM')
-        
-    # --------------------------------
-    # 6. Evaluate model on test set
-    # --------------------------------
-    
-    # Evaluate the performance of the ResNet model on the test_dataset
-    first_metrics, first_conf_matrix = evaluate_model(first_best_val_metric, first_best_model, test_dl, criterion, device, type_model='ResNet')
-    print()
-    # Prints the confusion matrix of the ResNet model
-    print_confusion_matrix(first_conf_matrix, type_model='ResNet')
-    print()
-    
-    # Evaluate the performance of the AlexNet model on the test_dataset
-    second_metrics, second_conf_matrix = evaluate_model(second_best_val_metric, second_best_model, test_dl, criterion, device, type_model='AlexNet')
-    print()
-    # Prints the confusion matrix of the AlexNet model
-    print_confusion_matrix(second_conf_matrix, type_model='AlexNet')
-    print("---------------------")
-    
-    # Evaluate the performance of the SVM model on the test_dataset
-    svm_metrics, svm_conf_matrix = evaluate_model(best_val_metric_svm, best_model_svm, test_svm, criterion_svm, device, type_model='SVM')
-    print()
-    # Prints the confusion matrix of SVM model
-    print_confusion_matrix(svm_conf_matrix, type_model='SVM')
-    print("---------------------")
-    # Depending on the configuration you choose, create graphs for confusion matrix
-    if config.graph.create_model_graph:
-        print_confusion_matrix_graph(first_conf_matrix, config.graph.view_model_graph, type_model='ResNet', test=False)
-        print_confusion_matrix_graph(second_conf_matrix, config.graph.view_model_graph, type_model='AlexNet', test=False)
-        print_confusion_matrix_graph(svm_conf_matrix, config.graph.view_model_graph, type_model='SVM', test=False)
+    metrics_list = []
+    for model in config.model.model_to_train:
+        # Train SVM model
+        if 'svm' in model.lower():
+            metrics = train_ml_model(model, config, device, train_dataset, val_dataset, test_dataset)
+        # Train deep learning models
+        else:
+            metrics = train_dl_model(model, config, device, train_dataset, val_dataset, test_dataset)
+            
+        # Store the performances in a list
+        metrics_list.append(metrics)
 
     # ---------------------
-    # 7. Compare performance
+    # 5. Compare performance
     # ---------------------
     
-    # Compare the performance of the two deep learning models and SVM model
-    compare_performance(first_metrics, second_metrics, svm_metrics)
-    # Depending on the configuration you choose, create graphs for compare graph
-    if config.graph.create_compare_graph:
-        print_compare_graph(first_metrics, second_metrics, svm_metrics, config.graph.view_compare_graph, test=False)
-
-    # ---------------------
-    # 8. Save model
-    # ---------------------
-    
-    # Verify that the checkpoint folder passed by the configuration parameter exists
-    os.makedirs(config.training.checkpoint_dir, exist_ok=True)
-    # Store model weights in the checkpoin folder
-    torch.save(first_best_model.state_dict(), f"{config.training.checkpoint_dir}/ResNet_best_model.pt")
-    torch.save(second_best_model.state_dict(), f"{config.training.checkpoint_dir}/AlexNet_best_model.pt")
-    dump(svm_model, f"{config.training.checkpoint_dir}/SVM_best_model.pkl")
+    # Compare the performance of the models
+    if len(config.model.model_to_train) > 1: # The comparison makes sense if at least two models are trained
+        print("---------------------")
+        compare_performance(metrics_list, config.model.model_to_train)
+        # Depending on the configuration you choose, create graphs for compare graph
+        if config.graph.create_compare_graph:
+            print_compare_graph(metrics_list, config.model.model_to_train, config.graph.view_compare_graph, test=False)
 
     print("---------------------")
-    print("\nModels saved.")
-    
     print("\nTrain finish correctly.\n")
-    

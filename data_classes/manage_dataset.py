@@ -44,15 +44,18 @@ transformation = {
 class ChestXrayDataset(Dataset):
     """
     A Dataset for chest X-ray images.
-
-    :param type: The type of the dataset (e.g., 'train', 'val', 'test').
-    :type type: str
-    :param root: The root directory of the dataset.
-    :type root: str
-    :param classes: The classes in the dataset.
-    :type classes: list
     """
     def __init__(self, type=None, root='data', classes=None):
+        """
+        A Dataset for chest X-ray images.
+
+        :param type: The type of the dataset (e.g., 'train', 'val', 'test').
+        :type type: str
+        :param root: The root directory of the dataset.
+        :type root: str
+        :param classes: The classes in the dataset.
+        :type classes: list
+        """
         # Initializing the variable
         path = ""
         path_removed = []
@@ -136,11 +139,14 @@ def class_count(dataset):
 class LabelPreservingConcatDataset(torch.utils.data.ConcatDataset):
     """
     A ConcatDataset that preserves the labels of the original datasets.
-
-    :param datasets: The datasets to concatenate.
-    :type datasets: list
     """
     def __init__(self, datasets):
+        """
+        A ConcatDataset that preserves the labels of the original datasets.
+
+        :param datasets: The datasets to concatenate.
+        :type datasets: list
+        """
         super().__init__(datasets)
         # Initializing arrays and string
         self.targets = []
@@ -157,13 +163,16 @@ class LabelPreservingConcatDataset(torch.utils.data.ConcatDataset):
 class LabelPreservingSubset(torch.utils.data.Subset):
     """
     A Subset that preserves the labels of the original dataset.
-
-    :param dataset: The original dataset.
-    :type dataset: Dataset
-    :param indices: The indices of the subset.
-    :type indices: list
     """
     def __init__(self, dataset, indices):
+        """
+        A Subset that preserves the labels of the original dataset.
+
+        :param dataset: The original dataset.
+        :type dataset: Dataset
+        :param indices: The indices of the subset.
+        :type indices: list
+        """
         super().__init__(dataset, indices)
         self.classes = dataset.classes
         self.targets = [dataset.targets[i] for i in indices]
@@ -179,6 +188,8 @@ def resize_datasets(train_dataset, val_dataset, split_percentage):
     :type train_dataset: Dataset
     :param val_dataset: The validation dataset.
     :type val_dataset: Dataset
+    :param split_percentage: The percentage of the combined dataset to be used for training.
+    :type split_percentage: float
     :return: Returns the resized train and validation datasets.
     :rtype: tuple (Dataset, Dataset)
     """
@@ -284,6 +295,9 @@ def create_directory_binary(path):
 def split_binary_directory(data_path):
     """
     Splits the directory into a binary structure by moving 'BACTERIA' and 'VIRUS' files into a 'PNEUMONIA' directory.
+
+    :param data_path: The path to the dataset directory.
+    :type data_path: str
     """
     # Initialize file_list and an array with paths
     file_list = []    
@@ -365,6 +379,9 @@ def create_directory_ternary(path):
 def split_ternary_directory(data_path):
     """
     Splits the directory into a ternary structure by moving files from the 'PNEUMONIA' directory to 'BACTERIA' and 'VIRUS' directories.
+
+    :param data_path: The path to the dataset directory.
+    :type data_path: str
     """
     # Initialize file_list and an array with paths
     file_list = []    
@@ -492,7 +509,6 @@ def load_datasets(config):
     # If the user expressed the preference in the base_config file, it create the graph
     if config.graph.create_dataset_graph:
         print_dataset_graph(train_dataset, val_dataset, test_dataset, config.graph.view_dataset_graph, resize=True)
-    print("---------------------")
     # Return datasets
     return train_dataset, val_dataset, test_dataset
 
@@ -519,13 +535,13 @@ def binary_load(config):
     :rtype: tuple (Dataset, Dataset, Dataset)
     """
     # Verify that the folders of the binary split exist
-    pneu_train = verify_division(config.data.datadir + 'train//PNEUMONIA')
-    pneu_val = verify_division(config.data.datadir + 'val//PNEUMONIA')
-    pneu_test = verify_division(config.data.datadir + 'test//PNEUMONIA')
+    pneu_train = verify_division(config.data.data_dir + 'train//PNEUMONIA')
+    pneu_val = verify_division(config.data.data_dir + 'val//PNEUMONIA')
+    pneu_test = verify_division(config.data.data_dir + 'test//PNEUMONIA')
     # If the division is not correct, it proceeds with a suitable split
     if not (pneu_train and pneu_val and pneu_test):
         print("Transform dataset to binary...")
-        split_binary_directory(config.data.datadir)
+        split_binary_directory(config.data.data_dir)
     # Determine new datasets
     train_dataset, val_dataset, test_dataset = load_datasets(config)
     # Return datasets
@@ -542,16 +558,16 @@ def ternary_load(config):
     :rtype: tuple (Dataset, Dataset, Dataset)
     """
     # Verify that the folders of the ternary split exist
-    bact_train = verify_division(config.data.datadir + 'train//BACTERIA')
-    vir_train = verify_division(config.data.datadir + 'train//VIRUS')
-    bact_val = verify_division(config.data.datadir + 'val//BACTERIA')
-    vir_val = verify_division(config.data.datadir + 'val//VIRUS')
-    bact_test = verify_division(config.data.datadir + 'test//BACTERIA')
-    vir_test = verify_division(config.data.datadir + 'test//VIRUS')
+    bact_train = verify_division(config.data.data_dir + 'train//BACTERIA')
+    vir_train = verify_division(config.data.data_dir + 'train//VIRUS')
+    bact_val = verify_division(config.data.data_dir + 'val//BACTERIA')
+    vir_val = verify_division(config.data.data_dir + 'val//VIRUS')
+    bact_test = verify_division(config.data.data_dir + 'test//BACTERIA')
+    vir_test = verify_division(config.data.data_dir + 'test//VIRUS')
     # If the division is not correct, it proceeds with a suitable split
     if not (bact_train and vir_train and bact_val and vir_val and bact_test and vir_test):
         print("Transform dataset to ternary...")
-        split_ternary_directory(config.data.datadir)
+        split_ternary_directory(config.data.data_dir)
     # Determine new datasets
     train_dataset, val_dataset, test_dataset = load_datasets(config)
     # Return datasets

@@ -6,17 +6,20 @@ import torch.nn as nn
 class ResidualBlock(nn.Module):
     """
     A PyTorch implementation of a residual block.
-
-    :param in_channels: The number of input channels.
-    :type in_channels: int
-    :param out_channels: The number of output channels.
-    :type out_channels: int
-    :param stride: The stride size for the convolutional layers.
-    :type stride: int
-    :param downsample: The downsample function for adjusting the size of the residual connection.
-    :type downsample: nn.Module or None
     """
     def __init__(self, in_channels, out_channels, stride = 1, downsample = None):
+        """
+        A PyTorch implementation of a residual block.
+
+        :param in_channels: The number of input channels.
+        :type in_channels: int
+        :param out_channels: The number of output channels.
+        :type out_channels: int
+        :param stride: The stride size for the convolutional layers.
+        :type stride: int
+        :param downsample: The downsample function for adjusting the size of the residual connection.
+        :type downsample: nn.Module or None
+        """
         super(ResidualBlock, self).__init__()
         # Conv2d -> Convolutional layer
         # BatchNorm2d -> Regularization function
@@ -54,6 +57,9 @@ class ResidualBlock(nn.Module):
 
 # Class to define the ResNet by inheriting nn.Module
 class ResNet(nn.Module):
+    """
+        A PyTorch implementation of the ResNet model.
+    """
     def __init__(self, block, layers, type_net, stride_size, padding_size, kernel_size, channels_of_color, planes, in_features, inplanes):
         """
         A PyTorch implementation of the ResNet model.
@@ -76,6 +82,8 @@ class ResNet(nn.Module):
         :type planes: list
         :param in_features: The number of input features for the final fully connected layer.
         :type in_features: int
+        :param inplanes: The number of input channels for the first convolutional layer.
+        :type inplanes: int
         """
         super(ResNet, self).__init__()
         # Set the number of classes according to the configuration you choose
@@ -94,10 +102,10 @@ class ResNet(nn.Module):
                         nn.BatchNorm2d(self.inplanes),
                         nn.ReLU())
         self.maxpool = nn.MaxPool2d(kernel_size = kernel_size[1], stride = stride_size[0], padding = padding_size[1])
-        self.layer0 = self._make_layer(block, planes[0], layers[0], stride_size[1])
-        self.layer1 = self._make_layer(block, planes[1], layers[1], stride_size[0])
-        self.layer2 = self._make_layer(block, planes[2], layers[2], stride_size[0])
-        self.layer3 = self._make_layer(block, planes[3], layers[3], stride_size[0])
+        self.layer = nn.ModuleList()
+        self.layer.append(self._make_layer(block, planes[0], layers[0], stride_size[1]))
+        for index in range(1, len(layers)):
+            self.layer.append(self._make_layer(block, planes[index], layers[index], stride_size[0]))
         self.avgpool = nn.AvgPool2d(kernel_size=kernel_size[0], stride=stride_size[1])
         self.fc = nn.Linear(in_features, num_classes)
         
@@ -142,10 +150,8 @@ class ResNet(nn.Module):
         """
         x = self.conv1(x)
         x = self.maxpool(x)
-        x = self.layer0(x)
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
+        for index in range(len(self.layer)):
+            x = self.layer[index](x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)

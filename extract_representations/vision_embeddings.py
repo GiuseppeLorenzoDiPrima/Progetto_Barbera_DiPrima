@@ -26,15 +26,18 @@ warnings.filterwarnings("ignore", category=UserWarning)
 class SVM_dataset:
     """
     Dataset used by the svm model.
-
-    :param classes: List of class labels.
-    :type classes: List
-    :param targets: List of target values.
-    :type targets: List
-    :param path: Path to the dataset.
-    :type path: String
     """
     def __init__(self, classes, targets, path):
+        """
+        Dataset used by the svm model.
+
+        :param classes: List of class labels.
+        :type classes: List
+        :param targets: List of target values.
+        :type targets: List
+        :param path: Path to the dataset.
+        :type path: String
+        """
         # Set variables
         self.classes = classes
         self.targets = targets
@@ -49,18 +52,20 @@ class SVM_dataset:
 
 # Class used to define embidding methods
 class VisionEmbeddings:
-    '''
     """
     This class is intended to extract embeddings from vision models.
-    It uses ViT (Vision Transformer) as a default model.
-
-    :param model_name: Name of the pre-trained ViT model.
-    :type : String
-    :param device: Device (e.g., 'cuda' or 'cpu') for inference.
-    :type : String
     """
-    '''
+    
     def __init__(self, model_name='google/vit-base-patch16-224', device='cuda'):
+        """
+        This class is intended to extract embeddings from vision models.
+        It uses ViT (Vision Transformer) as a default model.
+
+        :param model_name: Name of the pre-trained ViT model.
+        :type : String
+        :param device: Device (e.g., 'cuda' or 'cpu') for inference.
+        :type : String
+        """
         # Set model to extract embeddings
         self.feature_extractor = ViTImageProcessor.from_pretrained(model_name)
         self.model = ViTModel.from_pretrained(model_name)
@@ -262,6 +267,7 @@ class VisionEmbeddings:
         smote = SMOTE()
         # Oversample the training dataset
         new_train.features, new_train.labels = smote.fit_resample(new_train.features, new_train.labels)
+        
         # Re-compute attributes for the three datasets
         new_train.num_of_samples, new_train.num_of_features = new_train.features.shape
         new_validation.num_of_samples, new_validation.num_of_features = new_validation.features.shape
