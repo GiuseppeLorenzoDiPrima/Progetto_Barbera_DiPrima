@@ -118,8 +118,6 @@ def manage_best_model_and_metrics(model, evaluation_metric, val_metrics, best_va
              print(f"New best ResNet model found with val {evaluation_metric}: {val_metrics[evaluation_metric]:.4f}")
         elif str(type(model)) == '<class \'model_classes.alexnet_model.AlexNet\'>':
              print(f"New best AlexNet model found with val {evaluation_metric}: {val_metrics[evaluation_metric]:.4f}")
-        else:
-             print(f"New best SVM model found with val {evaluation_metric}: {val_metrics[evaluation_metric]:.4f}")
         # Store the new best validation metrics and the new best model
         best_val_metric = val_metrics
         best_model = model

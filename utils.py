@@ -101,7 +101,6 @@ def compare_performance(metrics_list, model_to_train):
     :type model_to_train: list
     :return: None
     """
-    
     print("Comparing performance:\n")
     # Initialize variables
     labels = ['Test accuracy', 'Test precision', 'Test recall', 'Test f1 score', 'Test loss']
@@ -177,7 +176,6 @@ def print_compare_graph(metrics_list, model_to_train, view, test):
     :type test: bool
     :return: None
     """
-    
     # Inizialize metris
     metrics = ['accuracy', 'precision', 'recall', 'f1', 'loss']
     # For each metric, print a graph
@@ -409,7 +407,6 @@ def get_name(saved_models_path):
     :return: Returns a list of model names based on the file paths.
     :rtype: list
     """
-    
     name = []
     for path in saved_models_path:
         if "svm" in path.lower():
