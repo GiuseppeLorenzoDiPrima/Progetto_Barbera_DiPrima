@@ -224,10 +224,10 @@ def evaluate_model(best_val_metric, best_model, test_set, criterion, device, typ
     :type best_val_metric: dict
     :param best_model: The best model obtained during training.
     :type best_model: torch.nn.Module
-    :param test_set: Dataloader or SVM dataset based on the model
-    :type test_set: torch.utils.data.DataLoader or test_svm
+    :param test_set: Test dataloader
+    :type test_set: torch.utils.data.DataLoader
     :param criterion: The criterion to use for calculating loss during evaluation.
-    :type criterion: torch.nn.modules.loss._Loss or Funcion
+    :type criterion: torch.nn.modules.loss._Loss
     :param device: The device on which to evaluate the model (e.g., 'cpu', 'cuda').
     :type device: str
     :param type_model: The type of the model (e.g., 'ResNet', 'AlexNet').
@@ -238,12 +238,7 @@ def evaluate_model(best_val_metric, best_model, test_set, criterion, device, typ
     print("---------------------")
     print_best_val_metrics(type_model, best_val_metric)
     # Evaluate the performance of the test_dataset
-    # SVM model
-    if type_model == 'SVM':
-        test_metrics, conf_matrix = evaluate_svm(best_model, test_set, criterion)
-    # Deep learning models
-    else:
-        test_metrics, conf_matrix = evaluate(best_model, test_set, criterion, device)
+    test_metrics, conf_matrix = evaluate(best_model, test_set, criterion, device)
     # Compute performance metrics
     metrics = print_evaluation(test_metrics)
     # Return performance metrics and confusion matrix
@@ -366,7 +361,7 @@ def train_ml_model(model_name, config, device, train_dataset, val_dataset, test_
     os.makedirs(config.training.checkpoint_dir, exist_ok=True)
     # Store model weights in the checkpoin folder
     dump(svm_model, f"{config.training.checkpoint_dir}/{model_name}_best_model.pkl")
-    print("\n" + model_name + " saved.") 
+    print(model_name + " saved.") 
     return extract_value(svm_metrics)
   
 # Train the deep learning model

@@ -11,7 +11,7 @@ training:
   best_metric_lower_is_better: false # Choose one: true or false
   early_stopping_metric: loss # Choose one: accuracy, precision, recall, f1 or loss
   earling_stopping_max_no_valid_epochs: 3
-  learning_rate: 0.001 
+  learning_rate: 0.001
 
 deep_learning_training:
   epochs: 20

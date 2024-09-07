@@ -105,12 +105,8 @@ def compare_performance(metrics_list, model_to_train):
     print("Comparing performance:\n")
     # Initialize variables
     labels = ['Test accuracy', 'Test precision', 'Test recall', 'Test f1 score', 'Test loss']
-    data = []
-    # For each performance metric and model, add them to an array
-    for i in range(len(metrics_list)):
-        data.append(metrics_list[i])
     # Print metrics
-    test_result = pd.DataFrame(data, columns=labels, index=model_to_train).round(4)
+    test_result = pd.DataFrame(metrics_list, columns=labels, index=model_to_train).round(4)
     print(test_result.transpose())
 
 # Create the graph for performance metrics
@@ -350,25 +346,6 @@ def print_evaluation(test_metrics):
     test_result = pd.DataFrame(metrics, columns=['Value'], index=labels).round(4)
     print(test_result)
     return metrics
-
-# Evaluate SVM model
-def evaluate_svm(model, test_set, criterion):
-    """
-    Evaluates the SVM model.
-
-    :param model: The SVM model.
-    :type model: SVM class
-    :param test_set: The test dataset.
-    :type test_set: SVM_dataset
-    :param criterion: The loss function to use for evaluation.
-    :type criterion: Function
-    :return: Test metrics and confusion matrix.
-    :rtype: Tuple (test_metrics, conf_matrix)
-    """
-    # Compute metrics and confusion matrix for SVM model
-    test_metrics, conf_matrix = model.evaluate_svm(test_set, criterion)
-    # Return metrics and confusion matrix
-    return test_metrics, conf_matrix
 
 # Print scree graph after PCA on dataset features
 def print_scree_graph(pca, test, view):
